@@ -37,7 +37,7 @@ void calprefixSum() {
   MPI_Comm_size(MPI_COMM_WORLD, &p);
   cout << "My rank is " << id << " " << p << endl;
 
-  int v = id * id - 10;
+  int v = (id - 4) * (id - 4) + 4;
   int x = v;
   int w = v;
   int sp = sqrt(p);
@@ -82,6 +82,8 @@ void calprefixSum() {
     w = min(w, x);
     MPI_Send(&x, 1, MPI_INT, id - 1, 0, MPI_COMM_WORLD);
   }
+
+  cout << "My rank is " << id << " " << w << endl;
 }
 
 int main() {
