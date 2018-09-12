@@ -35,12 +35,12 @@ void calprefixSum() {
   int id, p;
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
   MPI_Comm_size(MPI_COMM_WORLD, &p);
-  cout << "My rank is " << id << " " << p << endl;
 
   int v = (id - 4) * (id - 4) + 4;
   int x = v;
   int w = v;
   int sp = sqrt(p);
+  cout << "My rank is " << id << " " << w << endl;
 
   if (id % sp == 0) {
     // horizontal forward scan */
