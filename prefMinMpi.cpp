@@ -83,6 +83,8 @@ void calprefixSum() {
     if (row != 0) w = min(w, x);
     MPI_Send(&x, 1, MPI_INT, id - 1, 0, MPI_COMM_WORLD);
   }
+
+  MPI_Barrier(MPI_COMM_WORLD);
   cout << "My rank is " << id << " " << w << endl;
 }
 
