@@ -38,8 +38,8 @@ void calprefixSum() {
 
   int v = (id - 4) * (id - 4) + 4;
   int x = v, w = v;
-  int row = id / sp, cln = id % sp;
   int sp = sqrt(p);
+  int row = id / sp, cln = id % sp;
   cout << "My rank is " << id << " " << w << endl;
 
   if (cln == 0) {
