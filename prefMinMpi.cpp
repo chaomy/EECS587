@@ -59,7 +59,7 @@ void calprefixSum() {
     if (id == (p - 1)) {
       MPI_Recv(&x, 1, MPI_INT, id - sp, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       w = min(w, x);
-    } else if (id == sp) {
+    } else if (id == sp - 1) {
       x = w;
       MPI_Send(&x, 1, MPI_INT, id + sp, 0, MPI_COMM_WORLD);
     } else {
