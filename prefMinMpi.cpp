@@ -37,20 +37,20 @@ void calprefixSum() {
   MPI_Comm_size(MPI_COMM_WORLD, &p);
 
   int v = (id - 4) * (id - 4) + 4;
-  int x = v;
-  int w = v;
+  int x = v, w = v;
+  int row = id / sp, cln = id % sp;
   int sp = sqrt(p);
   cout << "My rank is " << id << " " << w << endl;
 
-  if (id % sp == 0) {
+  if (cln == 0) {
     // horizontal forward scan */
     w = v;
     MPI_Send(&w, 1, MPI_INT, id + 1, 0, MPI_COMM_WORLD);
 
     // horizontal backward scan */
     MPI_Recv(&x, 1, MPI_INT, id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    w = min(w, x);
-  } else if (id % sp == (sp - 1)) {
+    if (row != 0) w = min(w, x);
+  } else if (cln == (sp - 1)) {
     // horizontal forward scan
     MPI_Recv(&w, 1, MPI_INT, id - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     w = min(w, v);
@@ -70,6 +70,7 @@ void calprefixSum() {
       MPI_Send(&x, 1, MPI_INT, id + sp, 0, MPI_COMM_WORLD);
       x = t;
     }
+
     MPI_Send(&x, 1, MPI_INT, id - 1, 0, MPI_COMM_WORLD);
   } else {
     /* horizontal forward scan */
@@ -79,10 +80,9 @@ void calprefixSum() {
 
     /* horizontal backward scan */
     MPI_Recv(&x, 1, MPI_INT, id + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    w = min(w, x);
+    if (row != 0) w = min(w, x);
     MPI_Send(&x, 1, MPI_INT, id - 1, 0, MPI_COMM_WORLD);
   }
-
   cout << "My rank is " << id << " " << w << endl;
 }
 
