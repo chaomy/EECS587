@@ -43,6 +43,7 @@ void calprefixSum() {
   cout << "My rank is " << id << " " << w << endl;
   MPI_Barrier(MPI_COMM_WORLD);
   if (id == 0) cout << "---------------- Before -------------------" << endl;
+  MPI_Barrier(MPI_COMM_WORLD);
 
   if (cln == 0) {
     // horizontal forward scan */
@@ -88,6 +89,7 @@ void calprefixSum() {
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (id == 0) cout << "----------------- After -------------------" << endl;
+  MPI_Barrier(MPI_COMM_WORLD);
   cout << "My rank is " << id << " " << w << endl;
 }
 
