@@ -4,7 +4,10 @@
 using std::cout;
 using std::endl;
 
-int main() { 
-	cout << "hello world" << endl; 
-	return 0;
+__global__ void mykernel(void) {}
+
+int main() {
+  mykernel<<<1, 1>>>();
+  cout << "hello world" << endl;
+  return 0;
 }
