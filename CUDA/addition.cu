@@ -4,7 +4,8 @@ __global__ void add(int *a, int *b, int *c) {
 	*c = *a + *b;
 }
 
-using std::cout; 
+using std::cout;
+using std::endl;
 int main(void) {
 	int a, b, c;
 	int *d_a, *d_b, *d_c;
@@ -25,7 +26,7 @@ int main(void) {
 	add<<<1, 1>>> (d_a, d_b, d_c);
 	cudaMemcpy(&c, d_c, size, cudaMemcpyDeviceToHost);
 
-	cout<< "result is "<<c;
+	cout<< "result is "<<c << endl;
 	// Cleanup
 	cudaFree(d_a); cudaFree(d_b); cudaFree(d_c);
 	return 0;
