@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
   printf("Total amount of constant memory: %4.2f KB\n", iProp.totalConstMem/1024.0);
   printf("Total amount of shared memory per block: %4.2f KB\n", iProp.sharedMemPerBlock/1024.0);
   printf("Total number of registers available per block: %d\n", iProp.regsPerBlock);
-  printf("Warp size%d\n", deviceProp.warpSize);
+  printf("Warp size%d\n", iProp.warpSize);
   printf("Maximum number of threads per block: %d\n", iProp.maxThreadsPerBlock);
   printf("Maximum number of threads per multiprocessor: %d\n", iProp.maxThreadsPerMultiProcessor);
   printf("Maximum number of warps per multiprocessor: %d\n", iProp.maxThreadsPerMultiProcessor/32);
