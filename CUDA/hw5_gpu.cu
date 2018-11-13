@@ -34,7 +34,7 @@ __global__ void update(double *A, double *B, int N) {
   if (ix > 0 && ix < N - 1 && iy > 0 && iy < N - 1) {
     slot[0] = A[idx - N - 1], slot[1] = A[idx - N + 1];
     slot[2] = A[idx + N - 1], slot[3] = A[idx + N + 1];
-    cout << slot[0] << " " << slot[1] << endl;
+    printf("%f %f\n", slot[0], slot[1]);
     if (slot[1] < slot[0]) swap(&slot[0], &slot[1]);
     if (slot[3] < slot[2]) swap(&slot[2], &slot[3]);
     B[idx] = A[idx] + slot[0] < slot[2] ? fmin(slot[1], slot[2])
