@@ -174,7 +174,7 @@ void matrix_update(int N) {
 
   const int BLOCK_SIZE = 512;
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
-    blockTotal = total / BLOCK_SIZE + (total % BLOCK_SIZE == 0 ? 0 : 1);
+    blockTotal = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
     reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
         d_A, d_A, total);
   }
