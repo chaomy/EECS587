@@ -34,7 +34,6 @@ __global__ void update(double *A, double *B, int N) {
   if (ix > 0 && ix < N - 1 && iy > 0 && iy < N - 1) {
     slot[0] = A[idx - N - 1], slot[1] = A[idx - N + 1];
     slot[2] = A[idx + N - 1], slot[3] = A[idx + N + 1];
-    printf("%f %f\n", slot[0], slot[1]);
     if (slot[1] < slot[0]) swap(&slot[0], &slot[1]);
     if (slot[3] < slot[2]) swap(&slot[2], &slot[3]);
     B[idx] = A[idx] + slot[0] < slot[2] ? fmin(slot[1], slot[2])
@@ -119,7 +118,7 @@ void matrix_update(int N) {
   cudaEventRecord(start);
 
   for (int i = 0; i < 10; ++i) {
-    update<<<grid, block>>>(d_A, d_B, N);
+    update<<<grid.x, block.x>>>(d_A, d_B, N);
     cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
   }
 
@@ -132,11 +131,11 @@ void matrix_update(int N) {
   float millisecond = 0;
   cudaEventElapsedTime(&millisecond, start, stop);
 
-  // double sum{0};
-  cudaMemcpy(&res[0], &d_A[NN / 2], sizeof(double), cudaMemcpyDeviceToHost);
+  double sum;
+  cudaMemcpy(&sum, &d_A[NN / 2], sizeof(double), cudaMemcpyDeviceToHost);
 
   /* end timing */
-  cout << " calculation time " << millisecond << " sum = " << res[0] << endl;
+  cout << " calculation time " << millisecond << " sum = " << sum << endl;
 
   // cout << "sum = " << sum << " A[m][m] " << A[N / 2][N / 2] << " A[37][47] "
   //      << A[37][47] << " running time: " << duration << endl;
