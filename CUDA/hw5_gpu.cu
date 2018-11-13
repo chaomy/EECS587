@@ -30,14 +30,16 @@ __inline__ __device__ void swap(double &a, double &b) {
 __global__ void update(double *A, double *B, int N) {
   double slot[4];
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  int ix = idx / N, iy = idx % N;
-  if (ix > 0 && ix < N - 1 && iy > 0 && iy < N - 1) {
-    slot[0] = A[idx - N - 1], slot[1] = A[idx - N + 1];
-    slot[2] = A[idx + N - 1], slot[3] = A[idx + N + 1];
-    if (slot[1] < slot[0]) swap(slot[0], slot[1]);
-    if (slot[3] < slot[2]) swap(slot[2], slot[3]);
-    B[idx] = A[idx] + slot[0] < slot[2] ? fmin(slot[1], slot[2])
-                                        : fmin(slot[0], slot[3]);
+  if (idx < N * N) {
+    int ix = idx / N, iy = idx % N;
+    if (ix > 0 && ix < N - 1 && iy > 0 && iy < N - 1) {
+      slot[0] = A[idx - N - 1], slot[1] = A[idx - N + 1];
+      slot[2] = A[idx + N - 1], slot[3] = A[idx + N + 1];
+      if (slot[1] < slot[0]) swap(slot[0], slot[1]);
+      if (slot[3] < slot[2]) swap(slot[2], slot[3]);
+      B[idx] = A[idx] + slot[0] < slot[2] ? fmin(slot[1], slot[2])
+                                          : fmin(slot[0], slot[3]);
+    }
   }
 }
 
