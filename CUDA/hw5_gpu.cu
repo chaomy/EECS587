@@ -27,6 +27,7 @@ __global__ void update(float *A, float *B, int N) {
   }
 }
 
+template <unsigned int blockSize>
 __global__ void reduceSmemDyn(float *g_idata, float *g_odata, unsigned int n) {
   extern __shared__ float smem[];
 
@@ -122,7 +123,8 @@ void matrix_update(int N) {
     cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
   }
 
-  reduceSmemDyn<<<grid.x, block.x, BLOCK_X * sizeof(float)>>>(d_A, d_B, NN);
+  reduceSmemDyn<BLOCK_X>
+      <<<grid.x, block.x, BLOCK_X * sizeof(float)>>>(d_A, d_B, NN);
 
   // stop the timer
   cudaEventRecord(stop);
