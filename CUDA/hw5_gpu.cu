@@ -133,6 +133,7 @@ void matrix_update(int N) {
   float *A = (float *)malloc(nBytes);
   float *B = (float *)malloc(nBytes);
   float res[3] = {0, 0, 0};
+  int p1{N / 2 * N + N / 2}, p2{37 * N + 47};
 
   // initialize
   for (int k = NN - 1; k >= 0; --k) {
@@ -162,18 +163,20 @@ void matrix_update(int N) {
   // start the timer
   cudaEventRecord(start);
 
-  int num_iter = 10 / 2;
+  int num_iter = 10;
   for (int i = 0; i < num_iter; ++i) {
     update<<<grid.x, block.x>>>(d_A, d_B, N);
     update<<<grid.x, block.x>>>(d_B, d_A, N);
   }
+
+  cudaMemcpy(&res[1], &d_B[p1], sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   const int BLOCK_SIZE = 512;
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
     blockTotal = total / BLOCK_SIZE + (total % BLOCK_SIZE == 0 ? 0 : 1);
     reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
         d_B, d_B, total);
-    // cudaMemcpy(GB, GS, sizeof(float) * n * n, cudaMemcpyDeviceToDevice);
   }
 
   // stop the timer
@@ -183,10 +186,9 @@ void matrix_update(int N) {
   float millisecond = 0;
   cudaEventElapsedTime(&millisecond, start, stop);
 
-  int p1{N / 2 * N + N / 2}, p2{37 * N + 47};
   cudaMemcpy(&res[0], &d_B[0], sizeof(float), cudaMemcpyDeviceToHost);
-  cudaMemcpy(&res[1], &d_B[p1], sizeof(float), cudaMemcpyDeviceToHost);
-  cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
+  // cudaMemcpy(&res[1], &d_B[p1], sizeof(float), cudaMemcpyDeviceToHost);
+  // cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   /* end timing */
   cout << " calculation time " << millisecond << " sum = " << res[0]
