@@ -103,7 +103,7 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
   }
 
   if (tid < 32) {  // unrolling warp
-    volatile float *vsmem = smem;
+    volatile float *vsmem = sdata;
     vsmem[tid] += vsmem[tid + 32];
     vsmem[tid] += vsmem[tid + 16];
     vsmem[tid] += vsmem[tid + 8];
