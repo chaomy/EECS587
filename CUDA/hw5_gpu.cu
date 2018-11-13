@@ -135,8 +135,9 @@ void matrix_update(int N) {
   const int BLOCK_SIZE = 512;
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
     blockTotal = total / BLOCK_SIZE + (total % BLOCK_SIZE == 0 ? 0 : 1);
-    sumAll<BLOCK_SIZE><<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(double)>>>(
-        d_B, d_B, total);
+    reduceSmemDyn<BLOCK_SIZE>
+        <<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(double)>>>(d_B, d_B,
+                                                                  total);
 
     // cudaMemcpy(GB, GS, sizeof(double) * n * n, cudaMemcpyDeviceToDevice);
   }
