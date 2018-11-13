@@ -97,13 +97,22 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
     sdata[tid] = 0;
   __syncthreads();
 
-  for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
+  for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
     if (tid < s) sdata[tid] += sdata[tid + s];
     __syncthreads();
   }
 
-  if (tid == 0)
-    S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
+  if (tid < 32) {  // unrolling warp
+    volatile float *vsmem = smem;
+    vsmem[tid] += vsmem[tid + 32];
+    vsmem[tid] += vsmem[tid + 16];
+    vsmem[tid] += vsmem[tid + 8];
+    vsmem[tid] += vsmem[tid + 4];
+    vsmem[tid] += vsmem[tid + 2];
+    vsmem[tid] += vsmem[tid + 1];
+  }
+
+  if (tid == 0) S[blockIdx.x] = sdata[0];
 };
 
 // __global__ void reduceSmemDyn(float *g_idata, float *g_odata, unsigned int n)
@@ -134,17 +143,6 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
 //   if (blockDim.x >= 128 && tid < 64) smem[tid] += smem[tid + 64];
 
 //   __syncthreads();
-
-//   // unrolling warp
-//   if (tid < 32) {
-//     volatile float *vsmem = smem;
-//     vsmem[tid] += vsmem[tid + 32];
-//     vsmem[tid] += vsmem[tid + 16];
-//     vsmem[tid] += vsmem[tid + 8];
-//     vsmem[tid] += vsmem[tid + 4];
-//     vsmem[tid] += vsmem[tid + 2];
-//     vsmem[tid] += vsmem[tid + 1];
-//   }
 
 //   // write result for this block to global mem
 //   if (tid == 0) g_odata[blockIdx.x] = smem[0];
