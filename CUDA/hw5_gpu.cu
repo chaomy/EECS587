@@ -64,6 +64,7 @@ void matrix_update(int N) {
   cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
 
   // block size BLOCK_X x 1, grid size
+  int BLOCK_X = 32;
 
   dim3 block(BLOCK_X, 1);
   dim3 grid((NN + BLOCK_X - 1) / BLOCK_X, 1);
