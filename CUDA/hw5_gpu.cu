@@ -84,8 +84,8 @@ __global__ void update(float *A, float *B, int N) {
 //   if (tid == 0) g_odata[blockIdx.x] = smem[0];
 // }
 
-__global__ void reduceSmemDyn(double *A, double *S, int size) {
-  extern __shared__ double sdata[];
+__global__ void reduceSmemDyn(float *A, float *S, int size) {
+  extern __shared__ float sdata[];
 
   unsigned int tid = threadIdx.x;
   unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
