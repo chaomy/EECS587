@@ -27,14 +27,14 @@ __global__ void update(float *A, float *B, int N) {
   }
 }
 
-__global__ void reduceSmemDyn(float *A, float *S, int size) {
+__global__ void reduceSmemDyn(float *A, float *S, int N) {
   extern __shared__ float sdata[];
 
   unsigned int tid = threadIdx.x;
   unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
 
   // initialize dynamic shared memory
-  sdata[tid] = (tid < size) ? A[i] : 0.0;
+  sdata[tid] = (tid < N) ? A[i] : 0.0;
   __syncthreads();
 
   // in-place reduction in global memory
@@ -62,39 +62,6 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
 
   if (tid == 0) S[blockIdx.x] = sdata[0];
 };
-
-// __global__ void reduceSmemDyn(float *g_idata, float *g_odata, unsigned int n)
-// {
-//   extern __shared__ float smem[];
-
-//   // set thread ID
-//   unsigned int tid = threadIdx.x;
-//   float *idata = g_idata + blockIdx.x * blockDim.x;
-
-//   // set to smem by each threads
-//   smem[tid] = idata[tid];
-//   __syncthreads();
-
-//   // in-place reduction in global memory
-//   if (blockDim.x >= 1024 && tid < 512) smem[tid] += smem[tid + 512];
-
-//   __syncthreads();
-
-//   if (blockDim.x >= 512 && tid < 256) smem[tid] += smem[tid + 256];
-
-//   __syncthreads();
-
-//   if (blockDim.x >= 256 && tid < 128) smem[tid] += smem[tid + 128];
-
-//   __syncthreads();
-
-//   if (blockDim.x >= 128 && tid < 64) smem[tid] += smem[tid + 64];
-
-//   __syncthreads();
-
-//   // write result for this block to global mem
-//   if (tid == 0) g_odata[blockIdx.x] = smem[0];
-// }
 
 void matrix_update(int N) {
   int NN{N * N};
@@ -141,7 +108,7 @@ void matrix_update(int N) {
   cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
-  const int BLOCK_SIZE = 1024;
+  const int BLOCK_SIZE = 512;
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
     blockTotal = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
     reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
