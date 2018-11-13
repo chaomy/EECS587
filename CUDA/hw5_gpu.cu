@@ -72,27 +72,27 @@ __global__ void reduceSmemDyn(float *A, float *S, int N) {
 //     S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
 // };
 
-__global__ void sumAll(double *A, double *S, int size) {
-  extern __shared__ double sdata[];
+// __global__ void sumAll(double *A, double *S, int size) {
+//   extern __shared__ double sdata[];
 
-  unsigned int tid = threadIdx.x;
-  unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
+//   unsigned int tid = threadIdx.x;
+//   unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
 
-  // initialize dynamic shared memory
-  if (i < size)
-    sdata[tid] = A[i];
-  else
-    sdata[tid] = 0;
-  __syncthreads();
+//   // initialize dynamic shared memory
+//   if (i < size)
+//     sdata[tid] = A[i];
+//   else
+//     sdata[tid] = 0;
+//   __syncthreads();
 
-  for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
-    if (tid < s) sdata[tid] += sdata[tid + s];
-    __syncthreads();
-  }
+//   for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
+//     if (tid < s) sdata[tid] += sdata[tid + s];
+//     __syncthreads();
+//   }
 
-  if (tid == 0)
-    S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
-};
+//   if (tid == 0)
+//     S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
+// };
 
 void matrix_update(int N) {
   int NN{N * N};
