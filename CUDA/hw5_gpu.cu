@@ -21,10 +21,10 @@ using std::endl;
 //   res = slot[0] < slot[2] ? fmin(slot[1], slot[2]) : fmin(slot[0], slot[3]);
 // }
 
-__inline__ __device__ void swap(double *a, double *b) {
-  double tmp = *a;
-  *a = *b;
-  *b = tmp;
+__inline__ __device__ void swap(double &a, double &b) {
+  double tmp = a;
+  a = b;
+  b = tmp;
 };
 
 __global__ void update(double *A, double *B, int N) {
@@ -34,8 +34,8 @@ __global__ void update(double *A, double *B, int N) {
   if (ix > 0 && ix < N - 1 && iy > 0 && iy < N - 1) {
     slot[0] = A[idx - N - 1], slot[1] = A[idx - N + 1];
     slot[2] = A[idx + N - 1], slot[3] = A[idx + N + 1];
-    if (slot[1] < slot[0]) swap(&slot[0], &slot[1]);
-    if (slot[3] < slot[2]) swap(&slot[2], &slot[3]);
+    if (slot[1] < slot[0]) swap(slot[0], slot[1]);
+    if (slot[3] < slot[2]) swap(slot[2], slot[3]);
     B[idx] = A[idx] + slot[0] < slot[2] ? fmin(slot[1], slot[2])
                                         : fmin(slot[0], slot[3]);
   }
@@ -117,10 +117,10 @@ void matrix_update(int N) {
   // start the timer
   cudaEventRecord(start);
 
-  // for (int i = 0; i < 10; ++i) {
-  //   update<<<grid.x, block.x>>>(d_A, d_B, N);
-  //   cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
-  // }
+  for (int i = 0; i < 10; ++i) {
+    update<<<grid.x, block.x>>>(d_A, d_B, N);
+    cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
+  }
 
   // reduceSmemDyn<<<grid.x, block>>>(d_A, d_B, NN);
 
