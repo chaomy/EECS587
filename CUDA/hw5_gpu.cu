@@ -71,28 +71,32 @@ void matrix_update(int N) {
 
   cout << "grid " << grid.x << " block " << block.x << endl;
 
-  update<<<grid, block>>>(d_A, d_B, N);
-  cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
-  // std::clock_t start = std::clock();
+  // start the timer
+  cudaEventRecord(start);
 
-  // for (int it = 0; it < 10; ++it) {
-  //   for (int i = N - 2; i > 0; --i)
-  //     for (int j = N - 2; j > 0; --j)
-  //       find_small2(A[i - 1][j - 1], A[i - 1][j + 1], A[i + 1][j - 1],
-  //                   A[i + 1][j + 1], B[i][j]);
+  for (int i = 0; i < 10; ++i) {
+    update<<<grid, block>>>(d_A, d_B, N);
+    cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
+  }
 
-  //   for (int i = N - 2; i > 0; --i)
-  //     for (int j = N - 2; j > 0; --j) A[i][j] += B[i][j];
-  // }
+  // stop the timer
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+
+  float millisecond = 0;
+  cudaEventElapsedTime(&millisecond, start, stop);
 
   // double sum{0};
   // for (int i = N - 1; i >= 0; --i)
   //   for (int j = N - 1; j >= 0; --j) sum += A[i][j];
 
   /* end timing */
+  cout << " calculation time " << millisecond << endl;
 
-  // double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
   // cout << "sum = " << sum << " A[m][m] " << A[N / 2][N / 2] << " A[37][47] "
   //      << A[37][47] << " running time: " << duration << endl;
 
