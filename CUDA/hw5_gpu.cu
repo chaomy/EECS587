@@ -100,7 +100,9 @@ void matrix_update(int N) {
   double *d_A, *d_B;
   cudaMalloc((double **)&d_A, nBytes);
   cudaMalloc((double **)&d_B, nBytes);
+
   cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_B, A, nBytes, cudaMemcpyHostToDevice);
 
   // block size BLOCK_X x 1, grid size
   int BLOCK_X = 32;
