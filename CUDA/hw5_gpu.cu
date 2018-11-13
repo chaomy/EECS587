@@ -145,7 +145,7 @@ void matrix_update(int N) {
   for (int i = 0; i < grid.x / 4; i++) sum += d_B[i];
 
   /* end timing */
-  cout << " calculation time " << millisecond << " sum = " sum << endl;
+  cout << " calculation time " << millisecond << " sum = " << sum << endl;
 
   // cout << "sum = " << sum << " A[m][m] " << A[N / 2][N / 2] << " A[37][47] "
   //      << A[37][47] << " running time: " << duration << endl;
