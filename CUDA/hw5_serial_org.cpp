@@ -39,7 +39,7 @@ void matrix_update(int N) {
 
   std::clock_t start = std::clock();
 
-  for (int it = 0; it < 0; ++it) {
+  for (int it = 0; it < 10; ++it) {
     for (int i = N - 2; i > 0; --i)
       for (int j = N - 2; j > 0; --j)
         find_small2(A[i - 1][j - 1], A[i - 1][j + 1], A[i + 1][j - 1],
