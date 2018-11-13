@@ -59,7 +59,7 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
     S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
 };
 
-void matrix_update(int N) {
+void matrix_update(int N, int BLOCK_X = 128) {
   int NN{N * N};
   size_t nBytes = NN * sizeof(float);
   float *A = (float *)malloc(nBytes);
@@ -81,8 +81,6 @@ void matrix_update(int N) {
   cudaMemcpy(d_B, A, nBytes, cudaMemcpyHostToDevice);
 
   // block size BLOCK_X x 1, grid size
-  int BLOCK_X = 128;
-
   dim3 block(BLOCK_X, 1);
   dim3 grid((NN + BLOCK_X - 1) / BLOCK_X, 1);
 
@@ -104,11 +102,11 @@ void matrix_update(int N) {
   cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
-  const int BLOCK_SIZE = 128;
+  const int BLOCK_X = 128;
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
-    blockTotal = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
-        d_A, d_A, total);
+    blockTotal = (total + BLOCK_X - 1) / BLOCK_X;
+    reduceSmemDyn<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(d_A, d_A,
+                                                                    total);
   }
 
   // stop the timer
@@ -132,4 +130,8 @@ void matrix_update(int N) {
   free(B);
 }
 
-int main() { matrix_update(2000); }
+int main(int argc, char **argv) {
+  int N = atoi(argv[1]);        // problem size
+  int BLOCK_X = atoi(argv[2]);  // block size
+  matrix_update(N, BLOCK_X);
+}
