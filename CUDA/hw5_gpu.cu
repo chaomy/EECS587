@@ -91,9 +91,7 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
   unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
 
   // initialize dynamic shared memory
-  sdata[tid] = A[i];
-  // else
-  //   sdata[tid] = 0;
+  sdata[tid] = (tid < size) ? A[i] : 0.0;
   __syncthreads();
 
   for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
