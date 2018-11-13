@@ -27,12 +27,13 @@ __global__ void update(double *A, double *B, int N) {
   }
 }
 
-__global__ void reduceSmemDyn(double *g_idata, double *g_odata, int N) {
+__global__ void reduceSmemDyn(double *g_idata, double *g_odata,
+                              unsigned int n) {
   extern __shared__ double smem[];
 
   // set thread ID
   unsigned int tid = threadIdx.x;
-  double *idata = g_idata + blockIdx.x * blockDim.x;
+  int *idata = g_idata + blockIdx.x * blockDim.x;
 
   // set to smem by each threads
   smem[tid] = idata[tid];
@@ -128,13 +129,10 @@ void matrix_update(int N) {
   cout << " calculation time " << millisecond << " sum = " << res[0]
        << " A[N / 2][N / 2] " << res[1] << " A[37][47] " << res[2] << endl;
 
-  // cout << "sum = " << sum << " A[m][m] " << A[N / 2][N / 2] << " A[37][47] "
-  //      << A[37][47] << " running time: " << duration << endl;
-
   cudaFree(d_A);
   cudaFree(d_B);
   free(A);
   free(B);
 }
 
-int main() { matrix_update(500); }
+int main() { matrix_update(2000); }
