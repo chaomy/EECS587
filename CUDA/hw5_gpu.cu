@@ -5,22 +5,6 @@
 using std::cout;
 using std::endl;
 
-// inline void find_small2(const double &a, const double &b, const double &c,
-//                         const double &d, double &res) {
-//   double slot[4];
-//   if (a < b)
-//     slot[0] = a, slot[1] = b;
-//   else
-//     slot[0] = b, slot[1] = a;
-
-//   if (c < d)
-//     slot[2] = c, slot[3] = d;
-//   else
-//     slot[2] = d, slot[3] = c;
-
-//   res = slot[0] < slot[2] ? fmin(slot[1], slot[2]) : fmin(slot[0], slot[3]);
-// }
-
 __inline__ __device__ void swap(double &a, double &b) {
   double tmp = a;
   a = b;
@@ -126,7 +110,7 @@ void matrix_update(int N) {
     cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
   }
 
-  // reduceSmemDyn<<<grid.x, block>>>(d_A, d_B, NN);
+  reduceSmemDyn<<<grid.x, block.x, BLOCK_X * sizeof(double)>>>(d_A, d_B, NN);
 
   // stop the timer
   cudaEventRecord(stop);
@@ -135,12 +119,14 @@ void matrix_update(int N) {
   float millisecond = 0;
   cudaEventElapsedTime(&millisecond, start, stop);
 
-  double sum;
-  cudaMemcpy(&sum, &d_A[N / 2 * N + N / 2], sizeof(double),
-             cudaMemcpyDeviceToHost);
+  int p1{N / 2 * N + N / 2}, p2{37 * N + 47};
+  cudaMemcpy(&res[0], &d_B[0], sizeof(double), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&res[1], &d_B[p1], sizeof(double), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&res[2], &d_B[p2], sizeof(double), cudaMemcpyDeviceToHost);
 
   /* end timing */
-  cout << " calculation time " << millisecond << " sum = " << sum << endl;
+  cout << " calculation time " << millisecond << " sum = " << res[0]
+       << " A[N / 2][N / 2] " << res[1] << " A[37][47] " << res[2] << endl;
 
   // cout << "sum = " << sum << " A[m][m] " << A[N / 2][N / 2] << " A[37][47] "
   //      << A[37][47] << " running time: " << duration << endl;
