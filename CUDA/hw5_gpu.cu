@@ -132,7 +132,8 @@ void matrix_update(int N) {
   cudaEventElapsedTime(&millisecond, start, stop);
 
   double sum;
-  cudaMemcpy(&sum, &d_A[37 * N + 47], sizeof(double), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&sum, &d_A[N / 2 * N + N / 2], sizeof(double),
+             cudaMemcpyDeviceToHost);
 
   /* end timing */
   cout << " calculation time " << millisecond << " sum = " << sum << endl;
