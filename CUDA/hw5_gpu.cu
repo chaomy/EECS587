@@ -27,63 +27,63 @@ __global__ void update(float *A, float *B, int N) {
   }
 }
 
-// __global__ void reduceSmemDyn(float *A, float *S, int N) {
-//   extern __shared__ float sdata[];
-
-//   unsigned int tid = threadIdx.x;
-//   unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
-
-//   // initialize dynamic shared memory
-//   sdata[tid] = (tid < N) ? A[i] : 0.0;
-//   __syncthreads();
-
-//   // in-place reduction in global memory
-//   if (blockDim.x >= 1024 && tid < 512) sdata[tid] += sdata[tid + 512];
-//   __syncthreads();
-
-//   if (blockDim.x >= 512 && tid < 256) sdata[tid] += sdata[tid + 256];
-//   __syncthreads();
-
-//   if (blockDim.x >= 256 && tid < 128) sdata[tid] += sdata[tid + 128];
-//   __syncthreads();
-
-//   if (blockDim.x >= 128 && tid < 64) sdata[tid] += sdata[tid + 64];
-//   __syncthreads();
-
-//   if (tid < 32) {  // unrolling warp
-//     volatile float *vsmem = sdata;
-//     vsmem[tid] += vsmem[tid + 32];
-//     vsmem[tid] += vsmem[tid + 16];
-//     vsmem[tid] += vsmem[tid + 8];
-//     vsmem[tid] += vsmem[tid + 4];
-//     vsmem[tid] += vsmem[tid + 2];
-//     vsmem[tid] += vsmem[tid + 1];
-//   }
-
-//   if (tid == 0) S[blockIdx.x] = sdata[0];
-// };
-
-__global__ void reduceSmemDyn(float *A, float *S, int size) {
+__global__ void reduceSmemDyn(float *A, float *S, int N) {
   extern __shared__ float sdata[];
 
   unsigned int tid = threadIdx.x;
   unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
 
   // initialize dynamic shared memory
-  if (i < size)
-    sdata[tid] = A[i];
-  else
-    sdata[tid] = 0;
+  sdata[tid] = (tid < N) ? A[i] : 0.0;
   __syncthreads();
 
-  for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
-    if (tid < s) sdata[tid] += sdata[tid + s];
-    __syncthreads();
+  // in-place reduction in global memory
+  if (blockDim.x >= 1024 && tid < 512) sdata[tid] += sdata[tid + 512];
+  __syncthreads();
+
+  if (blockDim.x >= 512 && tid < 256) sdata[tid] += sdata[tid + 256];
+  __syncthreads();
+
+  if (blockDim.x >= 256 && tid < 128) sdata[tid] += sdata[tid + 128];
+  __syncthreads();
+
+  if (blockDim.x >= 128 && tid < 64) sdata[tid] += sdata[tid + 64];
+  __syncthreads();
+
+  if (tid < 32) {  // unrolling warp
+    volatile float *vsmem = sdata;
+    vsmem[tid] += vsmem[tid + 32];
+    vsmem[tid] += vsmem[tid + 16];
+    vsmem[tid] += vsmem[tid + 8];
+    vsmem[tid] += vsmem[tid + 4];
+    vsmem[tid] += vsmem[tid + 2];
+    vsmem[tid] += vsmem[tid + 1];
   }
 
-  if (tid == 0)
-    S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
+  if (tid == 0) S[blockIdx.x] = sdata[0];
 };
+
+// __global__ void reduceSmemDyn(float *A, float *S, int size) {
+//   extern __shared__ float sdata[];
+
+//   unsigned int tid = threadIdx.x;
+//   unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
+
+//   // initialize dynamic shared memory
+//   if (i < size)
+//     sdata[tid] = A[i];
+//   else
+//     sdata[tid] = 0;
+//   __syncthreads();
+
+//   for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
+//     if (tid < s) sdata[tid] += sdata[tid + s];
+//     __syncthreads();
+//   }
+
+//   if (tid == 0)
+//     S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
+// };
 
 void matrix_update(int N) {
   int NN{N * N};
