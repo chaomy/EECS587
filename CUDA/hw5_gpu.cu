@@ -32,7 +32,7 @@ __global__ void reduceSmemDyn(float *g_idata, float *g_odata, unsigned int n) {
 
   // set thread ID
   unsigned int tid = threadIdx.x;
-  double *idata = g_idata + blockIdx.x * blockDim.x;
+  float *idata = g_idata + blockIdx.x * blockDim.x;
 
   // set to smem by each threads
   smem[tid] = idata[tid];
