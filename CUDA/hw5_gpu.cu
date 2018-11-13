@@ -81,7 +81,7 @@ void matrix_update(int N) {
   cudaMemcpy(d_B, A, nBytes, cudaMemcpyHostToDevice);
 
   // block size BLOCK_X x 1, grid size
-  int BLOCK_X = 32;
+  int BLOCK_X = 128;
 
   dim3 block(BLOCK_X, 1);
   dim3 grid((NN + BLOCK_X - 1) / BLOCK_X, 1);
@@ -104,7 +104,7 @@ void matrix_update(int N) {
   cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
-  const int BLOCK_SIZE = 512;
+  const int BLOCK_SIZE = 128;
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
     blockTotal = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
     reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
