@@ -5,11 +5,6 @@
 using std::cout;
 using std::endl;
 
-// void mat_initialize(double *vec, int N) {
-//   for (int i = N - 1; i >= 0; --i)
-//     mat[i][j] = (1 + cos(2 * i) + sin(j)), mat[i][j] *= mat[i][j];
-// }
-
 // inline void find_small2(const double &a, const double &b, const double &c,
 //                         const double &d, double &res) {
 //   double slot[4];
@@ -26,7 +21,7 @@ using std::endl;
 //   res = slot[0] < slot[2] ? fmin(slot[1], slot[2]) : fmin(slot[0], slot[3]);
 // }
 
-__device__ void swap(double *a, double *b) {
+__inline__ __device__ void swap(double *a, double *b) {
   double tmp = *a;
   *a = *b;
   *b = tmp;
