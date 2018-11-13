@@ -31,12 +31,24 @@ __global__ void reduceSmemDyn(float *g_idata, float *g_odata, unsigned int n) {
   extern __shared__ float smem[];
 
   // set thread ID
+  // unsigned int tid = threadIdx.x;
+  // float *idata = g_idata + blockIdx.x * blockDim.x;
+
+  // new version
   unsigned int tid = threadIdx.x;
-  float *idata = g_idata + blockIdx.x * blockDim.x;
+  unsigned int i = blockIdx.x * (blockSize * 2) + tid;
+  unsigned int gridSize = blockSize * 2 * gridDim.x;
+
+  smem[tid] = 0;
+  while (i < n) {
+    sdata[tid] += g_idata[i] + g_idata[i + blockSize];
+    i += gridSize;
+  }
+  __syncthreads();
 
   // set to smem by each threads
-  smem[tid] = idata[tid];
-  __syncthreads();
+  // smem[tid] = idata[tid];
+  // __syncthreads();
 
   // in-place reduction in global memory
   if (blockDim.x >= 1024 && tid < 512) smem[tid] += smem[tid + 512];
