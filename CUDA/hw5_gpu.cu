@@ -110,7 +110,7 @@ void matrix_update(int N) {
     cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
   }
 
-  reduceSmemDyn<<<grid.x, block.x, BLOCK_X * sizeof(double)>>>(d_A, d_B, NN);
+  // reduceSmemDyn<<<grid.x, block.x, BLOCK_X * sizeof(double)>>>(d_A, d_B, NN);
 
   // stop the timer
   cudaEventRecord(stop);
