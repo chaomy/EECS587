@@ -37,11 +37,6 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
   sdata[tid] = (tid < size) ? A[i] : 0.0;
   __syncthreads();
 
-  // for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
-  //   if (tid < s) sdata[tid] += sdata[tid + s];
-  //   __syncthreads();
-  // }
-
   // in-place reduction in global memory
   if (blockDim.x >= 1024 && tid < 512) sdata[tid] += sdata[tid + 512];
   __syncthreads();
@@ -146,7 +141,7 @@ void matrix_update(int N) {
   cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
-  const int BLOCK_SIZE = 512;
+  const int BLOCK_SIZE = 1024;
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
     blockTotal = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
     reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
