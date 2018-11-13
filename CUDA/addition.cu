@@ -6,6 +6,7 @@ __global__ void add(int *a, int *b, int *c) {
 
 using std::cout;
 using std::endl;
+
 int main(void) {
 	int a, b, c;
 	int *d_a, *d_b, *d_c;
