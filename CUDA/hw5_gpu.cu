@@ -41,27 +41,15 @@ __global__ void update(double *A, double *B, int N) {
   }
 }
 
-__global__ void reduceSmemUnrollDyn(double *g_idata, double *g_odata, int n) {
-  extern __shared__ double smem[];
+__global__ void reduceSmemDyn(int *g_idata, int *g_odata, unsigned int n) {
+  extern __shared__ int smem[];
 
   // set thread ID
   unsigned int tid = threadIdx.x;
-  unsigned int idx = blockIdx.x * blockDim.x * 4 + threadIdx.x;
+  int *idata = g_idata + blockIdx.x * blockDim.x;
 
-  // unrolling 4
-  double tmpSum = 0;
-
-  if (idx < n) {
-    double a1, a2, a3, a4;
-    a1 = a2 = a3 = a4 = 0;
-    a1 = g_idata[idx];
-    if (idx + blockDim.x < n) a2 = g_idata[idx + blockDim.x];
-    if (idx + 2 * blockDim.x < n) a3 = g_idata[idx + 2 * blockDim.x];
-    if (idx + 3 * blockDim.x < n) a4 = g_idata[idx + 3 * blockDim.x];
-    tmpSum = a1 + a2 + a3 + a4;
-  }
-
-  smem[tid] = tmpSum;
+  // set to smem by each threads
+  smem[tid] = idata[tid];
   __syncthreads();
 
   // in-place reduction in global memory
@@ -83,7 +71,7 @@ __global__ void reduceSmemUnrollDyn(double *g_idata, double *g_odata, int n) {
 
   // unrolling warp
   if (tid < 32) {
-    volatile double *vsmem = smem;
+    volatile int *vsmem = smem;
     vsmem[tid] += vsmem[tid + 32];
     vsmem[tid] += vsmem[tid + 16];
     vsmem[tid] += vsmem[tid + 8];
@@ -101,6 +89,7 @@ void matrix_update(int N) {
   size_t nBytes = NN * sizeof(double);
   double *A = (double *)malloc(nBytes);
   double *B = (double *)malloc(nBytes);
+  double res[3] = {0, 0, 0};
 
   // initialize
   for (int k = NN - 1; k >= 0; --k) {
@@ -133,6 +122,8 @@ void matrix_update(int N) {
     cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
   }
 
+  reduceSmemDyn<<<grid.x, block>>>(d_A, d_B, NN);
+
   // stop the timer
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
@@ -140,12 +131,11 @@ void matrix_update(int N) {
   float millisecond = 0;
   cudaEventElapsedTime(&millisecond, start, stop);
 
-  double sum{0};
-  reduceSmemUnrollDyn<<<grid.x / 4, block>>>(d_A, d_B, NN);
-  for (int i = 0; i < grid.x / 4; i++) sum += d_B[i];
+  // double sum{0};
+  cudaMemcpy(&res[0], &d_B[0], sizeof(double), cudaMemcpyDeviceToHost);
 
   /* end timing */
-  cout << " calculation time " << millisecond << " sum = " << sum << endl;
+  cout << " calculation time " << millisecond << " sum = " << res[0] << endl;
 
   // cout << "sum = " << sum << " A[m][m] " << A[N / 2][N / 2] << " A[37][47] "
   //      << A[37][47] << " running time: " << duration << endl;
