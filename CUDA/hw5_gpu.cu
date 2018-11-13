@@ -163,7 +163,7 @@ void matrix_update(int N) {
   // start the timer
   cudaEventRecord(start);
 
-  int num_iter = 10;
+  int num_iter = 5;
   for (int i = 0; i < num_iter; ++i) {
     update<<<grid.x, block.x>>>(d_A, d_B, N);
     update<<<grid.x, block.x>>>(d_B, d_A, N);
