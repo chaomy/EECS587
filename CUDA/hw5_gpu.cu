@@ -41,7 +41,7 @@ __global__ void reduceSmemDyn(float *g_idata, float *g_odata, unsigned int n) {
 
   smem[tid] = 0;
   while (i < n) {
-    sdata[tid] += g_idata[i] + g_idata[i + blockSize];
+    smem[tid] += g_idata[i] + g_idata[i + blockSize];
     i += gridSize;
   }
   __syncthreads();
