@@ -27,29 +27,73 @@ __global__ void update(float *A, float *B, int N) {
   }
 }
 
-template <unsigned int blockSize>
+// template <unsigned int blockSize>
+// __global__ void reduceSmemDyn(float *g_idata, float *g_odata, unsigned int n)
+// {
+//   extern __shared__ float smem[];
+
+//   // set thread ID
+//   // unsigned int tid = threadIdx.x;
+//   // float *idata = g_idata + blockIdx.x * blockDim.x;
+
+//   // new version
+//   unsigned int tid = threadIdx.x;
+//   unsigned int i = blockIdx.x * (blockSize * 2) + tid;
+//   unsigned int gridSize = blockSize * 2 * gridDim.x;
+
+//   smem[tid] = 0;
+//   while (i < n) {
+//     smem[tid] += g_idata[i] + g_idata[i + blockSize];
+//     i += gridSize;
+//   }
+//   __syncthreads();
+
+//   // set to smem by each threads
+//   // smem[tid] = idata[tid];
+//   // __syncthreads();
+
+//   // in-place reduction in global memory
+//   if (blockDim.x >= 1024 && tid < 512) smem[tid] += smem[tid + 512];
+
+//   __syncthreads();
+
+//   if (blockDim.x >= 512 && tid < 256) smem[tid] += smem[tid + 256];
+
+//   __syncthreads();
+
+//   if (blockDim.x >= 256 && tid < 128) smem[tid] += smem[tid + 128];
+
+//   __syncthreads();
+
+//   if (blockDim.x >= 128 && tid < 64) smem[tid] += smem[tid + 64];
+
+//   __syncthreads();
+
+//   // unrolling warp
+//   if (tid < 32) {
+//     volatile float *vsmem = smem;
+//     vsmem[tid] += vsmem[tid + 32];
+//     vsmem[tid] += vsmem[tid + 16];
+//     vsmem[tid] += vsmem[tid + 8];
+//     vsmem[tid] += vsmem[tid + 4];
+//     vsmem[tid] += vsmem[tid + 2];
+//     vsmem[tid] += vsmem[tid + 1];
+//   }
+
+//   // write result for this block to global mem
+//   if (tid == 0) g_odata[blockIdx.x] = smem[0];
+// }
+
 __global__ void reduceSmemDyn(float *g_idata, float *g_odata, unsigned int n) {
   extern __shared__ float smem[];
 
   // set thread ID
-  // unsigned int tid = threadIdx.x;
-  // float *idata = g_idata + blockIdx.x * blockDim.x;
-
-  // new version
   unsigned int tid = threadIdx.x;
-  unsigned int i = blockIdx.x * (blockSize * 2) + tid;
-  unsigned int gridSize = blockSize * 2 * gridDim.x;
-
-  smem[tid] = 0;
-  while (i < n) {
-    smem[tid] += g_idata[i] + g_idata[i + blockSize];
-    i += gridSize;
-  }
-  __syncthreads();
+  float *idata = g_idata + blockIdx.x * blockDim.x;
 
   // set to smem by each threads
-  // smem[tid] = idata[tid];
-  // __syncthreads();
+  smem[tid] = idata[tid];
+  __syncthreads();
 
   // in-place reduction in global memory
   if (blockDim.x >= 1024 && tid < 512) smem[tid] += smem[tid + 512];
@@ -124,26 +168,13 @@ void matrix_update(int N) {
     update<<<grid.x, block.x>>>(d_B, d_A, N);
   }
 
-  // for (int i = 1, iNum = NN, iBlockNum; i < NN;
-  //      i = 2 * i * BLOCK_SIZE, iNum = iBlockNum) {
-  //   iBlockNum = (iNum + (2 * BLOCK_SIZE) - 1) / (2 * BLOCK_SIZE);
-  //   reduceSmemDyn<BLOCK_SIZE>
-  //       <<<iBlockNum, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(d_B, d_B,
-  //       iNum);
-  // }
-
   const int BLOCK_SIZE = 512;
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
     blockTotal = total / BLOCK_SIZE + (total % BLOCK_SIZE == 0 ? 0 : 1);
-    reduceSmemDyn<BLOCK_SIZE>
-        <<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(double)>>>(d_B, d_B,
-                                                                  total);
-
-    // cudaMemcpy(GB, GS, sizeof(double) * n * n, cudaMemcpyDeviceToDevice);
+    reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
+        d_B, d_B, total);
+    // cudaMemcpy(GB, GS, sizeof(float) * n * n, cudaMemcpyDeviceToDevice);
   }
-
-  // reduceSmemDyn<32><<<grid.x, block.x, BLOCK_X * sizeof(float)>>>(d_B, d_A,
-  // NN);
 
   // stop the timer
   cudaEventRecord(stop);

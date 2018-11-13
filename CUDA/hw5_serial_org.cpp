@@ -65,4 +65,4 @@ void matrix_update(int N) {
   free((double **)B);
 }
 
-int main() { matrix_update(500); }
+int main() { matrix_update(2000); }
