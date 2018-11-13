@@ -37,20 +37,20 @@ __global__ void reduceSmemDyn(float *A, float *S, int N) {
   sdata[tid] = (tid < N) ? A[i] : 0.0;
   __syncthreads();
 
-  for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
+  for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
     if (tid < s) sdata[tid] += sdata[tid + s];
     __syncthreads();
   }
 
-  if (tid < 32) {  // unrolling warp
-    volatile float *vsmem = sdata;
-    vsmem[tid] += vsmem[tid + 32];
-    vsmem[tid] += vsmem[tid + 16];
-    vsmem[tid] += vsmem[tid + 8];
-    vsmem[tid] += vsmem[tid + 4];
-    vsmem[tid] += vsmem[tid + 2];
-    vsmem[tid] += vsmem[tid + 1];
-  }
+  // if (tid < 32) {  // unrolling warp
+  //   volatile float *vsmem = sdata;
+  //   vsmem[tid] += vsmem[tid + 32];
+  //   vsmem[tid] += vsmem[tid + 16];
+  //   vsmem[tid] += vsmem[tid + 8];
+  //   vsmem[tid] += vsmem[tid + 4];
+  //   vsmem[tid] += vsmem[tid + 2];
+  //   vsmem[tid] += vsmem[tid + 1];
+  // }
 
   if (tid == 0) S[blockIdx.x] = sdata[0];
 };
