@@ -41,8 +41,8 @@ __global__ void update(double *A, double *B, int N) {
   }
 }
 
-__global__ void reduceSmemDyn(int *g_idata, int *g_odata, unsigned int n) {
-  extern __shared__ int smem[];
+__global__ void reduceSmemDyn(double *g_idata, double *g_odata, int N) {
+  extern __shared__ double smem[];
 
   // set thread ID
   unsigned int tid = threadIdx.x;
@@ -71,7 +71,7 @@ __global__ void reduceSmemDyn(int *g_idata, int *g_odata, unsigned int n) {
 
   // unrolling warp
   if (tid < 32) {
-    volatile int *vsmem = smem;
+    volatile double *vsmem = smem;
     vsmem[tid] += vsmem[tid + 32];
     vsmem[tid] += vsmem[tid + 16];
     vsmem[tid] += vsmem[tid + 8];
