@@ -109,7 +109,6 @@ void matrix_update(int N) {
     blockTotal = (total + BLOCK_SIZE - 1) / BLOCK_SIZE;
     reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
         d_A, d_A, total);
-    // cudaMemcpy(d_A, d_B, nBytes, cudaMemcpyDeviceToDevice);
   }
 
   // stop the timer
