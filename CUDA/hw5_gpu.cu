@@ -172,12 +172,12 @@ void matrix_update(int N) {
   cudaMemcpy(&res[1], &d_B[p1], sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
-  const int BLOCK_SIZE = 512;
-  for (int total = NN, blockTotal; total > 1; total = blockTotal) {
-    blockTotal = total / BLOCK_SIZE + (total % BLOCK_SIZE == 0 ? 0 : 1);
-    reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
-        d_B, d_B, total);
-  }
+  // const int BLOCK_SIZE = 512;
+  // for (int total = NN, blockTotal; total > 1; total = blockTotal) {
+  //   blockTotal = total / BLOCK_SIZE + (total % BLOCK_SIZE == 0 ? 0 : 1);
+  //   reduceSmemDyn<<<blockTotal, BLOCK_SIZE, BLOCK_SIZE * sizeof(float)>>>(
+  //       d_B, d_B, total);
+  // }
 
   // stop the timer
   cudaEventRecord(stop);
