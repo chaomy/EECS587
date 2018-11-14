@@ -36,7 +36,7 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
       printf("I am calling %d times \n", i);
       update<<<GRID_X, BLOCK_X>>>(A, B, N);
       __syncthreads();
-      update<<<GRID_X, BLOCK_X>>>(A, B, N);
+      update<<<GRID_X, BLOCK_X>>>(B, A, N);
       __syncthreads();
     }
   }
