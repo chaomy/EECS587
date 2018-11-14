@@ -66,9 +66,7 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   if (idx == 0) {
     for (int i = 0; i < 5; ++i) {
       update<<<GRID_X, BLOCK_X>>>(A, B, N);
-      // __syncthreads();
       update<<<GRID_X, BLOCK_X>>>(B, A, N);
-      // __syncthreads();
     }
 
     // store results to B
