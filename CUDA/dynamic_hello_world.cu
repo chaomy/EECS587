@@ -20,8 +20,4 @@ __global__ void nestedHelloWorld(int const iSize, int iDepth) {
   }
 }
 
-int main(int argc, char **argv) {
-  int N = atoi(argv[1]);        // problem size
-  int BLOCK_X = atoi(argv[2]);  // block size
-  nestedHelloWorld<<<1, 8>>>(8, 1);
-}
+int main(int argc, char **argv) { nestedHelloWorld<<<1, 8>>>(8, 1); }
