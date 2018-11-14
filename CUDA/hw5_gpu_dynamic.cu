@@ -36,7 +36,7 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
       __syncthreads();
       update<<<GRID_X, BLOCK_X>>>(B, A, N);
       __syncthreads();
-    } 
+    }
   }
 }
 
@@ -127,9 +127,9 @@ void matrix_update(int N, int BLOCK_X = 128) {
   // cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   /* end timing */
-  cout << "grid " << grid.x << " block " << block.x << " calculation time "
-       << millisecond << " sum = " << res[0] << " A[N / 2][N / 2] " << res[1]
-       << " A[37][47] " << res[2] << endl;
+  cout << "N " << N << " grid " << grid.x << " block " << block.x << " time "
+       << millisecond << " sum " << res[0] << " chk1 " << res[1] << " chk2 "
+       << res[2] << endl;
 
   cudaFree(d_A);
   cudaFree(d_B);
