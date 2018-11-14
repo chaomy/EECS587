@@ -29,7 +29,7 @@ __global__ void update(float *A, float *B, int N) {
 
 // template <unsigned int GRID_X, unsigned int BLOCK_X>
 __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
-  int p1{N / 2 * N + N / 2}, p2{37 * N + 47};
+  int p1 = N / 2 * N + N / 2, p2 = 37 * N + 47;
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx == 0) {
     for (int i = 0; i < 5; ++i) {
