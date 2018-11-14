@@ -11,12 +11,13 @@ __inline__ __device__ void swap(float &a, float &b) {
   b = tmp;
 };
 
-__global__ void parent(float *A, float *B, int N) {
+// template <unsigned int GRID_X, unsigned int BLOCK_X>
+__global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   int num_iter = 5;
   for (int i = 0; i < num_iter; ++i) {
     printf("I am runing %d", i);
-    update<<<grid.x, block.x>>>(A, B, N);
-    update<<<grid.x, block.x>>>(A, B, N);
+    update<<<GRID_X, BLOCK_X>>>(A, B, N);
+    update<<<GRID_X, BLOCK_X>>>(A, B, N);
   }
 }
 
@@ -111,7 +112,7 @@ void matrix_update(int N, int BLOCK_X = 128) {
                                                                     total);
   }
 
-  parent<<<grid.x, block.x>>>(d_A, d_B, N);
+  parent<<<grid.x, block.x>>>(d_A, d_B, N, grid.x, block.x);
 
   // stop the timer
   cudaEventRecord(stop);
