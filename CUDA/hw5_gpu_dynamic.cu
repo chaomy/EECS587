@@ -27,7 +27,6 @@ __global__ void update(float *A, float *B, int N) {
   }
 }
 
-// template <unsigned int GRID_X, unsigned int BLOCK_X>
 __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   for (int i = 0; i < 5; ++i) {
     update<<<GRID_X, BLOCK_X>>>(A, B, N);
@@ -56,17 +55,16 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
   }
 
   if (tid < 32) {  // unrolling warp
-    volatile float *vsmem = sdata;
-    vsmem[tid] += vsmem[tid + 32];
-    vsmem[tid] += vsmem[tid + 16];
-    vsmem[tid] += vsmem[tid + 8];
-    vsmem[tid] += vsmem[tid + 4];
-    vsmem[tid] += vsmem[tid + 2];
-    vsmem[tid] += vsmem[tid + 1];
+    volatile float *v_sdata = sdata;
+    v_sdata[tid] += v_sdata[tid + 32];
+    v_sdata[tid] += v_sdata[tid + 16];
+    v_sdata[tid] += v_sdata[tid + 8];
+    v_sdata[tid] += v_sdata[tid + 4];
+    v_sdata[tid] += v_sdata[tid + 2];
+    v_sdata[tid] += v_sdata[tid + 1];
   }
 
-  if (tid == 0)
-    S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
+  if (tid == 0) S[blockIdx.x] = sdata[0];
 };
 
 void matrix_update(int N, int BLOCK_X = 128) {
@@ -101,7 +99,6 @@ void matrix_update(int N, int BLOCK_X = 128) {
   // start the timer
   cudaEventRecord(start);
 
-  // parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
   parent<<<1, 1>>>(d_A, d_B, N, grid.x, block.x);
 
   cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
@@ -121,8 +118,6 @@ void matrix_update(int N, int BLOCK_X = 128) {
   cudaEventElapsedTime(&millisecond, start, stop);
 
   cudaMemcpy(&res[0], &d_A[0], sizeof(float), cudaMemcpyDeviceToHost);
-  // cudaMemcpy(&res[1], &d_B[p1], sizeof(float), cudaMemcpyDeviceToHost);
-  // cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   /* end timing */
   cout << "N " << N << " grid " << grid.x << " block " << block.x << " time "
