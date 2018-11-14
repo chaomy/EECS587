@@ -11,7 +11,7 @@ __inline__ __device__ void swap(float &a, float &b) {
   b = tmp;
 };
 
-__device__ void update(float *A, float *B, int N) {
+__global__ void update(float *A, float *B, int N) {
   float slot[4];
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N * N) {
