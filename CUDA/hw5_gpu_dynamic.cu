@@ -11,17 +11,7 @@ __inline__ __device__ void swap(float &a, float &b) {
   b = tmp;
 };
 
-// template <unsigned int GRID_X, unsigned int BLOCK_X>
-__global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
-  int num_iter = 5;
-  for (int i = 0; i < num_iter; ++i) {
-    printf("I am runing %d", i);
-    update<<<GRID_X, BLOCK_X>>>(A, B, N);
-    update<<<GRID_X, BLOCK_X>>>(A, B, N);
-  }
-}
-
-__global__ void update(float *A, float *B, int N) {
+__device__ void update(float *A, float *B, int N) {
   float slot[4];
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < N * N) {
@@ -34,6 +24,16 @@ __global__ void update(float *A, float *B, int N) {
       B[idx] = A[idx] + (slot[0] < slot[2] ? fmin(slot[1], slot[2])
                                            : fmin(slot[0], slot[3]));
     }
+  }
+}
+
+// template <unsigned int GRID_X, unsigned int BLOCK_X>
+__global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
+  int num_iter = 5;
+  for (int i = 0; i < num_iter; ++i) {
+    printf("I am runing %d", i);
+    update<<<GRID_X, BLOCK_X>>>(A, B, N);
+    update<<<GRID_X, BLOCK_X>>>(A, B, N);
   }
 }
 
