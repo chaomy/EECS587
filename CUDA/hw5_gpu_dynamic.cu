@@ -33,6 +33,7 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx == 0) {
     for (int i = 0; i < num_iter; ++i) {
+      printf("I am calling %d times \n", i);
       update<<<GRID_X, BLOCK_X>>>(A, B, N);
       __syncthreads();
       update<<<GRID_X, BLOCK_X>>>(A, B, N);
