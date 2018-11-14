@@ -67,7 +67,7 @@ void matrix_update(int N, int BLOCK_X = 128) {
   float res[3] = {0, 0, 0};
   int p1{N / 2 * N + N / 2}, p2{37 * N + 47};
 
-  // initialize 
+  // initialize
   for (int k = NN - 1; k >= 0; --k) {
     int i{k / N}, j{k % N};
     A[k] = (1 + cos(2 * i) + sin(j)), A[k] *= A[k];
@@ -83,8 +83,6 @@ void matrix_update(int N, int BLOCK_X = 128) {
   // block size BLOCK_X x 1, grid size
   dim3 block(BLOCK_X, 1);
   dim3 grid((NN + BLOCK_X - 1) / BLOCK_X, 1);
-
-  cout << "grid " << grid.x << " block " << block.x << endl;
 
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
@@ -120,8 +118,9 @@ void matrix_update(int N, int BLOCK_X = 128) {
   // cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   /* end timing */
-  cout << " calculation time " << millisecond << " sum = " << res[0]
-       << " A[N / 2][N / 2] " << res[1] << " A[37][47] " << res[2] << endl;
+  cout << "grid " << grid.x << " block " << block.x << " calculation time "
+       << millisecond << " sum = " << res[0] << " A[N / 2][N / 2] " << res[1]
+       << " A[37][47] " << res[2] << endl;
 
   cudaFree(d_A);
   cudaFree(d_B);
