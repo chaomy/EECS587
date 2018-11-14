@@ -29,6 +29,7 @@ __global__ void update(float *A, float *B, int N) {
 
 // template <unsigned int GRID_X, unsigned int BLOCK_X>
 __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
+  int p1{N / 2 * N + N / 2}, p2{37 * N + 47};
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx == 0) {
     for (int i = 0; i < 5; ++i) {
@@ -36,6 +37,17 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
       __syncthreads();
       update<<<GRID_X, BLOCK_X>>>(B, A, N);
       __syncthreads();
+    }
+
+    // store results to B
+    B[p1] = A[p1];
+    B[p2] = A[p2];
+
+    for (int num_size = N * N, blockTotal; num_size > 1;
+         num_size = blockTotal) {
+      blockTotal = (num_size + BLOCK_X - 1) / BLOCK_X;
+      reduceSmemDyn<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(A, A,
+                                                                      num_size);
     }
   }
 }
@@ -78,7 +90,6 @@ void matrix_update(int N, int BLOCK_X = 128) {
   float *A = (float *)malloc(nBytes);
   float *B = (float *)malloc(nBytes);
   float res[3] = {0, 0, 0};
-  int p1{N / 2 * N + N / 2}, p2{37 * N + 47};
 
   // initialize
   for (int k = NN - 1; k >= 0; --k) {
@@ -106,14 +117,8 @@ void matrix_update(int N, int BLOCK_X = 128) {
 
   parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
 
-  cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
-  cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
-
-  for (int total = NN, blockTotal; total > 1; total = blockTotal) {
-    blockTotal = (total + BLOCK_X - 1) / BLOCK_X;
-    reduceSmemDyn<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(d_A, d_A,
-                                                                    total);
-  }
+  // cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
+  // cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   // stop the timer
   cudaEventRecord(stop);
@@ -123,8 +128,8 @@ void matrix_update(int N, int BLOCK_X = 128) {
   cudaEventElapsedTime(&millisecond, start, stop);
 
   cudaMemcpy(&res[0], &d_A[0], sizeof(float), cudaMemcpyDeviceToHost);
-  // cudaMemcpy(&res[1], &d_B[p1], sizeof(float), cudaMemcpyDeviceToHost);
-  // cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&res[1], &d_B[p1], sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   /* end timing */
   cout << "grid " << grid.x << " block " << block.x << " calculation time "
