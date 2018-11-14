@@ -29,14 +29,11 @@ __global__ void update(float *A, float *B, int N) {
 
 // template <unsigned int GRID_X, unsigned int BLOCK_X>
 __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx == 0) {
-    for (int i = 0; i < 5; ++i) {
-      update<<<GRID_X, BLOCK_X>>>(A, B, N);
-      __syncthreads();
-      update<<<GRID_X, BLOCK_X>>>(B, A, N);
-      __syncthreads();
-    }
+  for (int i = 0; i < 5; ++i) {
+    update<<<GRID_X, BLOCK_X>>>(A, B, N);
+    __syncthreads();
+    update<<<GRID_X, BLOCK_X>>>(B, A, N);
+    __syncthreads();
   }
 }
 
@@ -104,7 +101,8 @@ void matrix_update(int N, int BLOCK_X = 128) {
   // start the timer
   cudaEventRecord(start);
 
-  parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
+  // parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
+  parent<<<1, 1>>>(d_A, d_B, N, grid.x, block.x);
 
   cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
