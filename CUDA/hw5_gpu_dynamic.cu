@@ -112,7 +112,8 @@ void matrix_update(int N, int BLOCK_X = 128) {
                                                                     total);
   }
 
-  parent<<<grid.x, block.x>>>(d_A, d_B, N, grid.x, block.x);
+  parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
+  cudaDeviceSynchronize();
 
   // stop the timer
   cudaEventRecord(stop);
