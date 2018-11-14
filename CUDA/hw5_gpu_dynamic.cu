@@ -34,8 +34,8 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   if (idx == 0) printf("hello I am parent \n");
   // for (int i = 0; i < num_iter; ++i) {
   // printf("I am runing %d", i);
-  // update<<<GRID_X, BLOCK_X>>>(A, B, N);
-  // __syncthreads();
+  update<<<GRID_X, BLOCK_X>>>(A, B, N);
+  __syncthreads();
   // update<<<GRID_X, BLOCK_X>>>(A, B, N);
   // __syncthreads();
   // }
