@@ -66,21 +66,20 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   if (idx == 0) {
     for (int i = 0; i < 5; ++i) {
       update<<<GRID_X, BLOCK_X>>>(A, B, N);
-      __syncthreads();
+      // __syncthreads();
       update<<<GRID_X, BLOCK_X>>>(B, A, N);
-      __syncthreads();
+      // __syncthreads();
     }
 
     // store results to B
     B[p1] = A[p1];
     B[p2] = A[p2];
 
-    for (int num_size = N * N, blockTotal; num_size > 1;
-         num_size = blockTotal) {
-      blockTotal = (num_size + BLOCK_X - 1) / BLOCK_X;
-      reduceSmemDyn<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(A, A,
-                                                                      num_size);
-      __syncthreads();
+    for (int numToSum = N * N, numBlock; numToSum > 1; numToSum = numBlock) {
+      numBlock = (numToSum + BLOCK_X - 1) / BLOCK_X;
+      reduceSmemDyn<<<numBlock, BLOCK_X, BLOCK_X * sizeof(float)>>>(A, A,
+                                                                    numToSum);
+      // __syncthreads();
     }
   }
 }
@@ -118,9 +117,6 @@ void matrix_update(int N, int BLOCK_X = 128) {
   cudaEventRecord(start);
 
   parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
-
-  // cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
-  // cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   // stop the timer
   cudaEventRecord(stop);
