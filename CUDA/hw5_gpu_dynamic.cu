@@ -92,6 +92,7 @@ void matrix_update(int N, int BLOCK_X = 128) {
   float *B = (float *)malloc(nBytes);
   float res[3] = {0, 0, 0};
 
+  int p1 = N / 2 * N + N / 2, p2 = 37 * N + 47;
   // initialize
   for (int k = NN - 1; k >= 0; --k) {
     int i{k / N}, j{k % N};
