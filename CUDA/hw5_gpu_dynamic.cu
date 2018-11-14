@@ -27,32 +27,6 @@ __global__ void update(float *A, float *B, int N) {
   }
 }
 
-// template <unsigned int GRID_X, unsigned int BLOCK_X>
-__global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
-  int p1 = N / 2 * N + N / 2, p2 = 37 * N + 47;
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx == 0) {
-    for (int i = 0; i < 5; ++i) {
-      update<<<GRID_X, BLOCK_X>>>(A, B, N);
-      __syncthreads();
-      update<<<GRID_X, BLOCK_X>>>(B, A, N);
-      __syncthreads();
-    }
-
-    // store results to B
-    B[p1] = A[p1];
-    B[p2] = A[p2];
-
-    for (int num_size = N * N, blockTotal; num_size > 1;
-         num_size = blockTotal) {
-      blockTotal = (num_size + BLOCK_X - 1) / BLOCK_X;
-      reduceSmemDyn<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(A, A,
-                                                                      num_size);
-      __syncthreads();
-    }
-  }
-}
-
 __global__ void reduceSmemDyn(float *A, float *S, int size) {
   extern __shared__ float sdata[];
 
@@ -84,6 +58,32 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
   if (tid == 0)
     S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
 };
+
+// template <unsigned int GRID_X, unsigned int BLOCK_X>
+__global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
+  int p1 = N / 2 * N + N / 2, p2 = 37 * N + 47;
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx == 0) {
+    for (int i = 0; i < 5; ++i) {
+      update<<<GRID_X, BLOCK_X>>>(A, B, N);
+      __syncthreads();
+      update<<<GRID_X, BLOCK_X>>>(B, A, N);
+      __syncthreads();
+    }
+
+    // store results to B
+    B[p1] = A[p1];
+    B[p2] = A[p2];
+
+    for (int num_size = N * N, blockTotal; num_size > 1;
+         num_size = blockTotal) {
+      blockTotal = (num_size + BLOCK_X - 1) / BLOCK_X;
+      reduceSmemDyn<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(A, A,
+                                                                      num_size);
+      __syncthreads();
+    }
+  }
+}
 
 void matrix_update(int N, int BLOCK_X = 128) {
   int NN{N * N};
