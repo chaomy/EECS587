@@ -106,7 +106,7 @@ void matrix_update(int N, int BLOCK_X = 128) {
   // start the timer
   cudaEventRecord(start);
 
-  parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
+  // parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
   // cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
   // cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
