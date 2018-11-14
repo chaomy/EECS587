@@ -29,11 +29,9 @@ __global__ void update(float *A, float *B, int N) {
 
 // template <unsigned int GRID_X, unsigned int BLOCK_X>
 __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
-  int num_iter = 5;
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx == 0) {
-    for (int i = 0; i < num_iter; ++i) {
-      printf("I am calling %d times \n", i);
+    for (int i = 0; i < 5; ++i) {
       update<<<GRID_X, BLOCK_X>>>(A, B, N);
       __syncthreads();
       update<<<GRID_X, BLOCK_X>>>(B, A, N);
@@ -99,8 +97,6 @@ void matrix_update(int N, int BLOCK_X = 128) {
   dim3 block(BLOCK_X, 1);
   dim3 grid((NN + BLOCK_X - 1) / BLOCK_X, 1);
 
-  cout << "grid " << grid.x << " block " << block.x << endl;
-
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
@@ -132,8 +128,9 @@ void matrix_update(int N, int BLOCK_X = 128) {
   // cudaMemcpy(&res[2], &d_B[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   /* end timing */
-  cout << " calculation time " << millisecond << " sum = " << res[0]
-       << " A[N / 2][N / 2] " << res[1] << " A[37][47] " << res[2] << endl;
+  cout << "grid " << grid.x << " block " << block.x << " calculation time "
+       << millisecond << " sum = " << res[0] << " A[N / 2][N / 2] " << res[1]
+       << " A[37][47] " << res[2] << endl;
 
   cudaFree(d_A);
   cudaFree(d_B);
