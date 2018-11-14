@@ -48,6 +48,7 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
       blockTotal = (num_size + BLOCK_X - 1) / BLOCK_X;
       reduceSmemDyn<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(A, A,
                                                                       num_size);
+      __syncthreads();
     }
   }
 }
