@@ -30,12 +30,13 @@ __global__ void update(float *A, float *B, int N) {
 // template <unsigned int GRID_X, unsigned int BLOCK_X>
 __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   int num_iter = 5;
+  printf("hello I am parent \n");
   // for (int i = 0; i < num_iter; ++i) {
   // printf("I am runing %d", i);
-  update<<<GRID_X, BLOCK_X>>>(A, B, N);
-  __syncthreads();
-  update<<<GRID_X, BLOCK_X>>>(A, B, N);
-  __syncthreads();
+  // update<<<GRID_X, BLOCK_X>>>(A, B, N);
+  // __syncthreads();
+  // update<<<GRID_X, BLOCK_X>>>(A, B, N);
+  // __syncthreads();
   // }
 }
 
@@ -115,6 +116,7 @@ void matrix_update(int N, int BLOCK_X = 128) {
   }
 
   parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
+
   cudaDeviceSynchronize();
 
   // stop the timer
