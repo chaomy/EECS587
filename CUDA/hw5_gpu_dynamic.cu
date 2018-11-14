@@ -39,8 +39,8 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
 __global__ void reduceSmemDyn(float *A, float *S, int size) {
   extern __shared__ float sdata[];
 
-  unsigned int tid = threadIdx.x;
-  unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
+  size_t tid = threadIdx.x;
+  size_t i = threadIdx.x + blockIdx.x * blockDim.x;
 
   // initialize dynamic shared memory
   if (i < size)
@@ -49,8 +49,8 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
     sdata[tid] = 0;
   __syncthreads();
 
-  for (unsigned int s = blockDim.x / 2; s > 32; s >>= 1) {
-    if (tid < s) sdata[tid] += sdata[tid + s];
+  for (size_t stride = blockDim.x / 2; stride > 32; stride >>= 1) {
+    if (tid < stride) sdata[tid] += sdata[tid + stride];
     __syncthreads();
   }
 
