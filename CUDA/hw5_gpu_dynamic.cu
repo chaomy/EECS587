@@ -31,7 +31,7 @@ __global__ void update(float *A, float *B, int N) {
 __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   int num_iter = 5;
   // for (int i = 0; i < num_iter; ++i) {
-  printf("I am runing %d", i);
+  // printf("I am runing %d", i);
   update<<<GRID_X, BLOCK_X>>>(A, B, N);
   update<<<GRID_X, BLOCK_X>>>(A, B, N);
   // }
