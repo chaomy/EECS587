@@ -36,35 +36,34 @@ __global__ void parent(float *A, float *B, int N, int GRID_X, int BLOCK_X) {
   }
 }
 
-__global__ void reduceSmemDyn(float *A, float *S, int size) {
-  extern __shared__ float sdata[];
-
+__global__ void reduceSum(float *A, float *S, int size) {
+  extern __shared__ float shr_data[];
   size_t tid = threadIdx.x;
-  size_t i = threadIdx.x + blockIdx.x * blockDim.x;
+  size_t mid = threadIdx.x + blockIdx.x * blockDim.x;
 
   // initialize dynamic shared memory
-  if (i < size)
-    sdata[tid] = A[i];
+  if (mid < size)
+    shr_data[tid] = A[mid];
   else
-    sdata[tid] = 0;
+    shr_data[tid] = 0;
   __syncthreads();
 
   for (size_t stride = blockDim.x / 2; stride > 32; stride >>= 1) {
-    if (tid < stride) sdata[tid] += sdata[tid + stride];
+    if (tid < stride) shr_data[tid] += shr_data[tid + stride];
     __syncthreads();
   }
 
   if (tid < 32) {  // unrolling warp
-    volatile float *v_sdata = sdata;
-    v_sdata[tid] += v_sdata[tid + 32];
-    v_sdata[tid] += v_sdata[tid + 16];
-    v_sdata[tid] += v_sdata[tid + 8];
-    v_sdata[tid] += v_sdata[tid + 4];
-    v_sdata[tid] += v_sdata[tid + 2];
-    v_sdata[tid] += v_sdata[tid + 1];
+    volatile float *v_shr_data = shr_data;
+    v_shr_data[tid] += v_shr_data[tid + 32];
+    v_shr_data[tid] += v_shr_data[tid + 16];
+    v_shr_data[tid] += v_shr_data[tid + 8];
+    v_shr_data[tid] += v_shr_data[tid + 4];
+    v_shr_data[tid] += v_shr_data[tid + 2];
+    v_shr_data[tid] += v_shr_data[tid + 1];
   }
 
-  if (tid == 0) S[blockIdx.x] = sdata[0];
+  if (tid == 0) S[blockIdx.x] = shr_data[0];
 };
 
 void matrix_update(int N, int BLOCK_X = 128) {
@@ -106,8 +105,8 @@ void matrix_update(int N, int BLOCK_X = 128) {
 
   for (int total = NN, blockTotal; total > 1; total = blockTotal) {
     blockTotal = (total + BLOCK_X - 1) / BLOCK_X;
-    reduceSmemDyn<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(d_A, d_A,
-                                                                    total);
+    reduceSum<<<blockTotal, BLOCK_X, BLOCK_X * sizeof(float)>>>(d_A, d_A,
+                                                                total);
   }
 
   // stop the timer
