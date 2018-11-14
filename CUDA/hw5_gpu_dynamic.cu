@@ -111,8 +111,8 @@ void matrix_update(int N, int BLOCK_X = 128) {
   parent<<<1, block.x>>>(d_A, d_B, N, grid.x, block.x);
   cudaDeviceSynchronize();
 
-  // cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
-  // cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&res[1], &d_A[p1], sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(&res[2], &d_A[p2], sizeof(float), cudaMemcpyDeviceToHost);
 
   // for (int total = NN, blockTotal; total > 1; total = blockTotal) {
   //   blockTotal = (total + BLOCK_X - 1) / BLOCK_X;
