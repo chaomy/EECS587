@@ -14,13 +14,15 @@ void QMParallel::runQM() {
 
   int *A = (int *)malloc(nBytes);
 
+  // parse each string to num
   for (auto s : input) {
-    std::bitset<32> bits(s);
-    std::cout << "foo: " << bits << '\n';
+    int num{0}, base{1};
+    for (int i = s.size() - 1; i >= 0; --i, base *= 3)
+      num += (s[i] - '0') * base;
+    cout << "num is " << num << endl;
   }
 
   int *d_A;
-
   cudaMalloc((int **)&d_A, nBytes);
   cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
 }
