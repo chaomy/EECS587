@@ -3,7 +3,7 @@
 #CINCLUDE  =   
 
 CXX       =  nvcc 
-CPPFLAGS +=  -Wall -g -O3 -std=c++11
+CPPFLAGS +=  -g -O3 -std=c++11
 CDLINK    =  -lm 
 
 SRCS = qmInput.cu \
