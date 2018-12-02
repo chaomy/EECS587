@@ -15,7 +15,7 @@ void QMParallel::runQM() {
   int *A = (int *)malloc(nBytes);
 
   for (auto s : input) {
-    bitset<32> bits(s);
+    std::bitset<32> bits(s);
     std::cout << "foo: " << bits << '\n';
   }
 
