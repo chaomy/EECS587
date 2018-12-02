@@ -13,11 +13,11 @@ void QMParallel::readTrueTable(string fname) {
 
   getline(s, line, ' ');
   getline(s, line);
-  const int in_bit_num = stoi(line);
+  static const int in_bit_num = stoi(line);
 
   getline(s, line, ' ');
   getline(s, line);
-  const int out_bit_num = stoi(line);
+  static const int out_bit_num = stoi(line);
 
   getline(s, line, ' ');
   getline(s, line);

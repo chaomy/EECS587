@@ -7,10 +7,13 @@
 
 #include "qmHome.h"
 
+static const int in_bit_num;
+static const int out_bit_num;
+
 void QMParallel::runQM() {
-  int T{static_cast<int>(std::pow(3, in_bit_num))}; 
+  int T{static_cast<int>(std::pow(3, in_bit_num))};
   size_t nBytes = T * sizeof(int);
-  cout << "T = " << T << "nBytes = " << nBytes << endl; 
+  cout << "T = " << T << "nBytes = " << nBytes << endl;
 
   // int *A = (int *)malloc(nBytes);
   // int *d_A;
