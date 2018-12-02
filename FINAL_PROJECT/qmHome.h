@@ -17,8 +17,6 @@ using std::string;
 using std::vector;
 
 class QMParallel {
-  int in_bit_num;
-  int out_bit_num;
   vector<string> input, output; 
   vector<string> in_labels, out_labels;
 

@@ -13,29 +13,32 @@ void QMParallel::readTrueTable(string fname) {
 
   getline(s, line, ' ');
   getline(s, line);
-  in_bit_num = stoi(line); 
+  const int in_bit_num = stoi(line);
 
   getline(s, line, ' ');
-  getline(s, line);  
-  out_bit_num = stoi(line); 
+  getline(s, line);
+  const int out_bit_num = stoi(line);
 
-  getline(s, line, ' '); 
-  getline(s, line); 
-  split(line, " ", in_labels); 
+  getline(s, line, ' ');
+  getline(s, line);
+  split(line, " ", in_labels);
 
-  getline(s, line, ' '); 
-  getline(s, line); 
-  split(line, " ", out_labels); 
+  getline(s, line, ' ');
+  getline(s, line);
+  split(line, " ", out_labels);
 
-  // std::copy(in_labels.begin(), in_labels.end(), std::ostream_iterator<string>(std::cout, " "));  
-  // std::copy(out_labels.begin(), out_labels.end(), std::ostream_iterator<string>(std::cout, " "));
+  // std::copy(in_labels.begin(), in_labels.end(),
+  // std::ostream_iterator<string>(std::cout, " "));
+  // std::copy(out_labels.begin(), out_labels.end(),
+  // std::ostream_iterator<string>(std::cout, " "));
 
-  // read head 
-  while (getline(s, line) && (line != ".e")) {  
-  	vector<string> buff;  
-  	split(line, " ", buff);  
-  	input.push_back(buff[0]); 
-  	output.push_back(buff[1]);   
+  // read head
+  while (getline(s, line) && (line != ".e")) {
+    vector<string> buff;
+    split(line, " ", buff);
+    input.push_back(buff[0]);
+    output.push_back(buff[1]);
   }
-  // std::copy(input.begin(), input.end(), std::ostream_iterator<string>(std::cout, "\n ")); 
+  // std::copy(input.begin(), input.end(),
+  // std::ostream_iterator<string>(std::cout, "\n "));
 }
