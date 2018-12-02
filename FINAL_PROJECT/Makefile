@@ -14,16 +14,13 @@ MAKETARGET 	= exc_qm
 
 OBJECTS := $(subst .cu,.o,${SRCS})
 
-CC = ${CXX}
-
-%.o: %.cpp
-	${CC} -c  $<  ${CINCLUDE} ${CPPFLAGS}  #
+%.o: %.cu
+	${CXX} -c  $<  ${CINCLUDE} ${CPPFLAGS}  #
 
 ${MAKETARGET}:$(OBJECTS)
 
-
 all: ${MAKETARGET}
-	${CC}  -o  ${MAKETARGET}  ${OBJECTS}  ${CDLINK}  ${CPPFLAGS}
+	${CXX}  -o  ${MAKETARGET}  ${OBJECTS}  ${CDLINK}  ${CPPFLAGS}
 
 clean:
 	rm -f *.o
