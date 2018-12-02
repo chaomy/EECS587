@@ -27,8 +27,8 @@ void QMParallel::readTrueTable(string fname) {
   getline(s, line); 
   split(line, " ", out_labels); 
 
-  std::copy(in_labels.begin(), in_labels.end(), std::ostream_iterator<string>(std::cout, " "));  
-  std::copy(out_labels.begin(), out_labels.end(), std::ostream_iterator<string>(std::cout, " "));
+  // std::copy(in_labels.begin(), in_labels.end(), std::ostream_iterator<string>(std::cout, " "));  
+  // std::copy(out_labels.begin(), out_labels.end(), std::ostream_iterator<string>(std::cout, " "));
 
   // read head 
   while (getline(s, line) && (line != ".e")) {  
@@ -37,5 +37,5 @@ void QMParallel::readTrueTable(string fname) {
   	input.push_back(buff[0]); 
   	output.push_back(buff[1]);   
   }
-  std::copy(input.begin(), input.end(), std::ostream_iterator<string>(std::cout, "\n ")); 
+  // std::copy(input.begin(), input.end(), std::ostream_iterator<string>(std::cout, "\n ")); 
 }

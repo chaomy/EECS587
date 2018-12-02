@@ -64,6 +64,7 @@ void matrix_update(int N, int BLOCK_X = 128) {
   size_t nBytes = NN * sizeof(float);
   float *A = (float *)malloc(nBytes);
   float *B = (float *)malloc(nBytes);
+  
   float res[3] = {0, 0, 0};
   int p1{N / 2 * N + N / 2}, p2{37 * N + 47};
 
