@@ -1,11 +1,11 @@
 #ifndef _QM_CUDA_
 
+#include <algorithm>
 #include <bitset>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
-#include <iterator> 
-#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -17,19 +17,19 @@ using std::string;
 using std::vector;
 
 class QMParallel {
-  int in_bit_num, out_bit_num; 
-  vector<string> input, output; 
+  int in_bit_num, out_bit_num;
+  vector<string> input, output;
   vector<string> in_labels, out_labels;
 
  public:
-  // read input true table 
+  // read input true table
   void readTrueTable(string fname);
 
-  // write output true table 
-  void writeTrueTable(string fname); 
+  // write output true table
+  void writeTrueTable(string fname);
 
-  // run QMP parallel  
-  void runQM(); 
+  // run QMP parallel
+  void runQM(int);
 };
 
 inline void split(const string& s, const char* delim, vector<string>& v) {
