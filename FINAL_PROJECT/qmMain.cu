@@ -10,6 +10,6 @@
 int main() {
   QMParallel qm;
   qm.readTrueTable("input.pla"); 
-  qm.runQM(); 
+  qm.runQM(128); 
   return (0);
 }
