@@ -2,7 +2,7 @@
 #PFTOOLS   = 
 #CINCLUDE  =   
 
-CXX       =  g++
+CXX       =  nvcc 
 CPPFLAGS +=  -Wall -g -O3 -std=c++11
 CDLINK    =  -lm 
 
