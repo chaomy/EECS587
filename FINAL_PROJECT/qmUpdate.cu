@@ -8,7 +8,7 @@
 #include "qmHome.h"
 
 void QMParallel::runQM() {
-  int T{std::pow(3, in_bit_num)};
+  int T{static_cast<int>(std::pow(3, in_bit_num))};
   size_t nBytes = T * sizeof(int);
   cout << " T = " << T << "nBytes = " << nBytes << endl;
 }
