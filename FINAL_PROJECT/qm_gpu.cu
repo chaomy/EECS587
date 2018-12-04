@@ -125,7 +125,8 @@ inline int convertStr2Num(string s) {
   return num;
 }
 
-int main(int BLOCK_X = 256) {
+int main() {
+  int BLOCK_X = 256; 
   readTrueTable("input.pla");
 
   vector<string> v;
