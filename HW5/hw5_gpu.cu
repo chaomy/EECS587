@@ -59,12 +59,6 @@ __global__ void reduceSmemDyn(float *A, float *S, int size) {
     S[blockIdx.x] = sdata[0];  // each block has its sum of threads within
 };
 
-inline int convertStr2Num(string s) {
-  int num{0}, base{0};
-  for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') * base;
-  return num;
-}
-
 void matrix_update(int N, int BLOCK_X = 128) {
   int NN{N * N}; 
   size_t nBytes = NN * sizeof(float);
