@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <vector>
+#include <lock.h> 
 
 using std::cout;
 using std::endl;
@@ -56,7 +57,8 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
   }
 }
 
-__global__ void takePrime(bool* A, int T, int size, int* primes) {
+__global__ void takePrime(bool* A, int T, int NumThread, int size,
+                          int* primes) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < (1 << NumThread)) {
     Lock mylock;
@@ -194,7 +196,8 @@ int main() {
     update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
   }
 
-  takePrime<<<grid.x, block.x>>>(d_A, T, *d_prime_size, d_primes);
+  takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, *d_prime_size,
+                                 d_primes);
 
   cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
