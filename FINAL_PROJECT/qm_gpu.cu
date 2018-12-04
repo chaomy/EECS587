@@ -136,7 +136,7 @@ int main(int BLOCK_X = 256) {
   vector<string> relative(v);
 
   cout << "Input " << endl; 
-  std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n")); 
+  // std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n")); 
 
   int T{static_cast<int>(pow(3, in_bit_num))}; 
   int T3(T * 3); 
@@ -148,7 +148,7 @@ int main(int BLOCK_X = 256) {
   memset(A, false, nBytes); 
   for (int i = 0; i < input.size(); ++i) {
     int in_num = convertStr2Num(input[i]);
-    if (output[0] == '1') A[in_num * 3] = true;    
+    if (output[i][0] == '1') A[in_num * 3] = true;    
   }
 
   bool *d_A;  
@@ -157,7 +157,7 @@ int main(int BLOCK_X = 256) {
 
   // block 
   dim3 block(BLOCK_X, 1);
-  dim3 grid(((1 << N) + BLOCK_X - 1) / BLOCK_X, 1);
+  dim3 grid(((1 << in_bit_num) + BLOCK_X - 1) / BLOCK_X, 1);
 
   cudaEvent_t start, stop;
   cudaEventCreate(&start);
@@ -168,7 +168,7 @@ int main(int BLOCK_X = 256) {
 
   // __global__ void update(bool* A, int T, int NumThread, int numof2){
   for (int round = 0; round < in_bit_num; ++round){
-  	update<<<grid.x, block.x>>>(d_A, T, 1 << N, round); 
+  	update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round); 
   }
 
   // stop the timer
