@@ -30,36 +30,48 @@ int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
 vector<string> input, output;
 
+__global__ void update(bool* A, int T, int NumThread, int numof2) {
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  if (idx < (1 << NumThread)) {
+    for (int num = idx; num < T; num = num + (1 << NumThread)) {
+      int cnt_2 = 0;
+      // convert 2 base to 3 base, count 2
+      for (int tmp = num; tmp; tmp /= 3) {
+        cnt_2 += (tmp % 3 == 2);
+      }
 
-__global__ void update(bool* A, int T, int NumThread, int numof2){
-	int idx = threadIdx.x + blockIdx.x * blockDim.x;
-	if (idx < (1 << NumThread)){
-		for (int num = idx; num < T; num = num + (1 << NumThread)){  
-			int cnt_2 = 0; 
-			// convert 2 base to 3 base, count 2  
-			for (int tmp = num; tmp; tmp /= 3){
-				cnt_2 += (tmp % 3 == 2);
-			}
+      if (cnt_2 != numof2) continue;
 
-			if (cnt_2 != numof2) continue;  
-
-			for (int tmp = num, exp = 1; tmp; tmp /= 3, exp *= 3){
-				if (tmp % 3 == 0){
-					int next = num + exp; 
-					if (A[3 * next]){
-						A[3 * (next + exp)] = true;  
-						A[3 * num + 1] = true; 
-						A[3 * next + 2] = true; 
-					}
-				}
-			}
-		}
-	}
+      for (int tmp = num, exp = 1; tmp; tmp /= 3, exp *= 3) {
+        if (tmp % 3 == 0) {
+          int next = num + exp;
+          if (A[3 * next]) {
+            A[3 * (next + exp)] = true;
+            A[3 * num + 1] = true;
+            A[3 * next + 2] = true;
+          }
+        }
+      }
+    }
+  }
 }
 
+__global__ void takePrime(bool* A, int T, int size, int* primes) {
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  if (idx < (1 << NumThread)) {
+    Lock mylock;
+    for (int num = idx; num < T; num = num + (1 << NumThread)) {
+      if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
+        mylock.lock();
+        primes[size++] = num;
+        mylock.unlock();
+      }
+    }
+  }
+}
 
 // __global__ void assignEachRoundJob(){
-// 	extern __shared__ int 
+// 	extern __shared__ int
 // }
 
 bool comp(int n, string a, string b) {
@@ -126,7 +138,7 @@ inline int convertStr2Num(string s) {
 }
 
 int main() {
-  int BLOCK_X = 256; 
+  int BLOCK_X = 256;
   readTrueTable("input.pla");
 
   vector<string> v;
@@ -136,27 +148,37 @@ int main() {
   prepInput(v);
   vector<string> relative(v);
 
-  cout << "Input " << endl; 
-  // std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n")); 
+  cout << "Input " << endl;
+  // std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
 
-  int T{static_cast<int>(pow(3, in_bit_num))}; 
-  int T3(T * 3); 
-  size_t nBytes = T3 * sizeof(bool);  
+  int T{static_cast<int>(pow(3, in_bit_num))};
+  int T3(T * 3);
+  size_t nBytes = T3 * sizeof(bool);
 
-  bool *A = (bool *)malloc(nBytes);
+  bool* A = (bool*)malloc(nBytes);
+  int* primes = (int*)malloc(1000 * sizeof(int));
+  int prime_size = 0;
 
-  // initialize 
-  memset(A, false, nBytes); 
+  // initialize
+  memset(A, false, nBytes);
+
   for (int i = 0; i < input.size(); ++i) {
     int in_num = convertStr2Num(input[i]);
-    if (output[i][0] == '1') A[in_num * 3] = true;    
+    if (output[i][0] == '1') A[in_num * 3] = true;
   }
 
-  bool *d_A;  
-  cudaMalloc((bool **)&d_A, nBytes);
-  cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice); 
+  bool* d_A;
+  int* d_primes;
+  int* d_prime_size;
 
-  // block 
+  cudaMalloc((bool**)&d_A, nBytes);
+  cudaMalloc((int**)&d_primes, 1000 * sizeof(int));
+  cudaMalloc((int**)&d_prime_size, sizeof(int));
+
+  cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_prime_size, &prime_size, sizeof(int), cudaMemcpyHostToDevice);
+
+  // block
   dim3 block(BLOCK_X, 1);
   dim3 grid(((1 << in_bit_num) + BLOCK_X - 1) / BLOCK_X, 1);
 
@@ -168,13 +190,20 @@ int main() {
   cudaEventRecord(start);
 
   // __global__ void update(bool* A, int T, int NumThread, int numof2){
-  for (int round = 0; round < in_bit_num; ++round){
-  	update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round); 
+  for (int round = 0; round < in_bit_num; ++round) {
+    update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
   }
+
+  takePrime<<<grid.x, block.x>>>(d_A, T, *d_prime_size, d_primes);
+
+  cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
+  cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
 
   // stop the timer
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
+
+  for (int i = 0; i < prime_size; ++i) cout << primes[i] << endl;
 
   // to be parallelet
   // for (int i = 0; i < 16; i++) {
@@ -202,10 +231,9 @@ int main() {
   //   buckets = std::move(next);
   // }
 
-
   // int count;
   // string temp;
-  
+
   // for (int i = 0; i < relative.size(); i++) {
   //   if (relative[i].empty()) continue;
 
