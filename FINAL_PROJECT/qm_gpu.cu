@@ -30,14 +30,14 @@ int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
 vector<string> input, output;
 
-bool comp(int n, string a, string b) {
+__global__ bool comp(int n, string a, string b) {
   for (int i = 0; i < n; i++) {
     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
   }
   return true;
 }
 
-int checkBITs(int n, string a, string b) {
+__device__ int checkBITs(int n, string a, string b) {
   int count = 0, temp;
   for (int i = 0; i < n; ++i) {
     if (a[i] != b[i]) {
