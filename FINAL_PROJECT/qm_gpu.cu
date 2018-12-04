@@ -5,7 +5,6 @@
 #include <iostream>
 #include <unordered_set>
 #include <vector>
-#include <lock.h> 
 
 using std::cout;
 using std::endl;
@@ -13,6 +12,13 @@ using std::ifstream;
 using std::string;
 using std::unordered_set;
 using std::vector;
+
+/*
+	attention !!! 
+	write struct Lock{
+		...
+	}
+*/
 
 inline void split(const string& s, const char* delim, vector<string>& v) {
   // duplicate original string, return a char pointer and free  memories
