@@ -30,7 +30,39 @@ int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
 vector<string> input, output;
 
-__global__ bool comp(int n, string a, string b) {
+
+__global__ void update(bool* A, int T, int NumThread, int numof2){
+	int idx = threadIdx.x + blockIdx.x * blockDim.x;
+	if (idx < (1 << NumThread)){
+		for (int num = idx; num < T; num = num + (1 << NumThread)){  
+			int cnt_2 = 0; 
+			// convert 2 base to 3 base, count 2  
+			for (int tmp = num; tmp; tmp /= 3){
+				cnt_2 += (tmp % 3 == 2);
+			}
+
+			if (cnt_2 != numof2) continue;  
+
+			for (int tmp = num, exp = 1; tmp; tmp /= 3, exp *= 3){
+				if (tmp % 3 == 0){
+					int next = num + exp; 
+					if (A[3 * next]){
+						A[3 * (next + exp)] = true;  
+						A[3 * num + 1] = true; 
+						A[3 * next + 2] = true; 
+					}
+				}
+			}
+		}
+	}
+}
+
+
+// __global__ void assignEachRoundJob(){
+// 	extern __shared__ int 
+// }
+
+bool comp(int n, string a, string b) {
   for (int i = 0; i < n; i++) {
     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
   }
@@ -88,12 +120,12 @@ void prepInput(vector<string>& v) {
 }
 
 inline int convertStr2Num(string s) {
-  int num{0}, base{0};
+  int num{0}, base{1};
   for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') * base;
   return num;
 }
 
-int main() {
+int main(int BLOCK_X = 256) {
   readTrueTable("input.pla");
 
   vector<string> v;
@@ -106,17 +138,42 @@ int main() {
   cout << "Input " << endl; 
   std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n")); 
 
-  int T{static_cast<int>(1 << in_bit_num)};
-  size_t nBytes = T * sizeof(char); 
+  int T{static_cast<int>(pow(3, in_bit_num))}; 
+  int T3(T * 3); 
+  size_t nBytes = T3 * sizeof(bool);  
 
-  char *A = (int *)malloc(nBytes);
+  bool *A = (bool *)malloc(nBytes);
 
-  // parse each string to num
+  // initialize 
+  memset(A, false, nBytes); 
   for (int i = 0; i < input.size(); ++i) {
     int in_num = convertStr2Num(input[i]);
-    int out_num = convertStr2Num(output[i]);
-    A[in_num] = out_num;
+    if (output[0] == '1') A[in_num * 3] = true;    
   }
+
+  bool *d_A;  
+  cudaMalloc((bool **)&d_A, nBytes);
+  cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice); 
+
+  // block 
+  dim3 block(BLOCK_X, 1);
+  dim3 grid(((1 << N) + BLOCK_X - 1) / BLOCK_X, 1);
+
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+
+  // start the timer
+  cudaEventRecord(start);
+
+  // __global__ void update(bool* A, int T, int NumThread, int numof2){
+  for (int round = 0; round < in_bit_num; ++round){
+  	update<<<grid.x, block.x>>>(d_A, T, 1 << N, round); 
+  }
+
+  // stop the timer
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
 
   // to be parallelet
   // for (int i = 0; i < 16; i++) {
@@ -145,54 +202,54 @@ int main() {
   // }
 
 
-  int count;
-  string temp;
+  // int count;
+  // string temp;
   
-  for (int i = 0; i < relative.size(); i++) {
-    if (relative[i].empty()) continue;
+  // for (int i = 0; i < relative.size(); i++) {
+  //   if (relative[i].empty()) continue;
 
-    int count = 0, num = 0;
-    for (int j = 0; j < prime.size(); j++) {
-      if (prime.size() && comp(16, relative[i], prime[j])) {
-        if (++count > 1) break;
-        num = j;
-      }
-    }
+  //   int count = 0, num = 0;
+  //   for (int j = 0; j < prime.size(); j++) {
+  //     if (prime.size() && comp(16, relative[i], prime[j])) {
+  //       if (++count > 1) break;
+  //       num = j;
+  //     }
+  //   }
 
-    if (count == 1) {  // essential prime implicant
-      result.push_back(prime[num]);
-      for (int j = 0; j < relative.size(); j++) {
-        if (relative[j].size() && comp(16, relative[j], prime[num])) {
-          relative[j] = "";
-        }
-      }
-      prime[num] = "";
-    }
-  }
+  //   if (count == 1) {  // essential prime implicant
+  //     result.push_back(prime[num]);
+  //     for (int j = 0; j < relative.size(); j++) {
+  //       if (relative[j].size() && comp(16, relative[j], prime[num])) {
+  //         relative[j] = "";
+  //       }
+  //     }
+  //     prime[num] = "";
+  //   }
+  // }
 
-  int cnt_empty = std::count_if(relative.begin(), relative.end(),
-                                [](string a) { return a.size() == 0; });
+  // int cnt_empty = std::count_if(relative.begin(), relative.end(),
+  //                               [](string a) { return a.size() == 0; });
 
-  while (cnt_empty < relative.size()) {
-    do {
-      temp = prime.back();
-      prime.pop_back();
-    } while (temp.size() == 0 && prime.size());
+  // while (cnt_empty < relative.size()) {
+  //   do {
+  //     temp = prime.back();
+  //     prime.pop_back();
+  //   } while (temp.size() == 0 && prime.size());
 
-    count = 0;
-    for (int i = 0; i < relative.size(); i++) {
-      if (relative[i].size() && comp(16, relative[i], temp)) {
-        relative[i] = "";
-        cnt_empty++;
-        count++;
-      }
-    }
-    if (count > 0) {
-      result.push_back(temp);
-    }
-  }
+  //   count = 0;
+  //   for (int i = 0; i < relative.size(); i++) {
+  //     if (relative[i].size() && comp(16, relative[i], temp)) {
+  //       relative[i] = "";
+  //       cnt_empty++;
+  //       count++;
+  //     }
+  //   }
+  //   if (count > 0) {
+  //     result.push_back(temp);
+  //   }
+  // }
 
-  cout << "result : " << endl;
-  for (auto item : result) cout << item << endl;
-  return 0;
+  // cout << "result : " << endl;
+  // for (auto item : result) cout << item << endl;
+  // return 0;
 }
