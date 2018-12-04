@@ -69,7 +69,7 @@ bool comp(int n, string a, string b) {
   return true;
 }
 
-__device__ int checkBITs(int n, string a, string b) {
+int checkBITs(int n, string a, string b) {
   int count = 0, temp;
   for (int i = 0; i < n; ++i) {
     if (a[i] != b[i]) {
