@@ -238,7 +238,7 @@ int main() {
 
   // CPU find prime
 
-  for (int num = 0; num < T, ++num) {
+  for (int num = 0; num < T; ++num) {
     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
       primes[prime_size++] = num;
     }
