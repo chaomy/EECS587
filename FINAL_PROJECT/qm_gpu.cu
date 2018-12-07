@@ -74,10 +74,7 @@ __global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
       if (cnt_2 != numof2) continue;
 
       for (int tmp = num, cnt = 0, exp = 1; cnt < numBit; tmp /= 3, exp *= 3, ++cnt) {
-        // only look  for pairs when the bit is 0
-        if (num == 13) {
-          printf("I am %d, has %d\n", num, A[3 * (num + exp)]);
-        }
+        // only look  for pairs when the bit is 0        
         if (tmp % 3 == 0) {
           int next = num + exp;
           if (A[3 * next]) {
