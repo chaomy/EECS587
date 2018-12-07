@@ -31,9 +31,9 @@ __global__ struct Lock {
   __device__ void lock() {
     while (atomicCAS(mutex, 0, 1) != 0);
   }
-
   __device__ void unlock() { atomicExch(mutex, 0); }
 };
+
 inline void split(const string& s, const char* delim, vector<string>& v) {
   // duplicate original string, return a char pointer and free  memories
   char* dup = strdup(s.c_str());
@@ -78,10 +78,9 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
 }
 
 __global__ void takePrime(bool* A, int T, int NumThread, int size,
-                          int* primes) {
+                          int* primes, Lock mylock) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < (1 << NumThread)) {
-    Lock mylock;
     for (int num = idx; num < T; num = num + (1 << NumThread)) {
       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
         mylock.lock();
@@ -181,6 +180,8 @@ int main() {
   int* primes = (int*)malloc(1000 * sizeof(int));
   int prime_size = 0;
 
+  Lock mylock;
+
   // initialize
   memset(A, false, nBytes);
 
@@ -217,7 +218,7 @@ int main() {
   }
 
   takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, *d_prime_size,
-                                 d_primes);
+                                 d_primes, mylock);
 
   cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
