@@ -196,12 +196,14 @@ int main() {
     }
   }
 
+  return;
+
   bool* d_A;
   int* d_primes;
   int* d_prime_size;
 
   cudaMalloc((bool**)&d_A, nBytes);
-  cudaMalloc((int**)&d_primes, 1000 * sizeof(int));
+  cudaMalloc((int**)&d_primes, 1000000 * sizeof(int));
   cudaMalloc((int**)&d_prime_size, sizeof(int));
 
   cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
@@ -257,8 +259,8 @@ int main() {
 
   for (int i = 0; i < prime_size; ++i) cout << primes[i] << endl;
   float millisecond = 0;
-  cudaEventElapsedTime(&millisecond,start,stop);
-  cout<<"time: "<<millisecond<<" ms"<<endl;
+  cudaEventElapsedTime(&millisecond, start, stop);
+  cout << "time: " << millisecond << " ms" << endl;
 
   // to be parallelet
   // for (int i = 0; i < 16; i++) {
