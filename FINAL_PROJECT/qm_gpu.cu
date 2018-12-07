@@ -192,6 +192,8 @@ int main() {
     }
   }
 
+  free(A);
+  free(primes);
   return 0;
 
   bool* d_A;
