@@ -122,7 +122,7 @@ int main() {
     for (int j = 0; j < 16; ++j) {
       for (auto str_a : buckets[j]) {
         for (auto str_b : buckets[j + 1]) {
-          int res = checkBITs(16, str_a, str_b);
+          int res = checkBITs(in_bit_num, str_a, str_b);
           if (res != -1) {  // can merge
             flag.insert(str_a);
             flag.insert(str_b);
