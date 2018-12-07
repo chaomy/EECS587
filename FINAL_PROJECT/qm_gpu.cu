@@ -106,10 +106,6 @@ __global__ void takePrime(bool* A, int T, int NumThread, int* size, int* primes,
   }
 }
 
-// __global__ void assignEachRoundJob(){
-// 	extern __shared__ int
-// }
-
 bool comp(int n, string a, string b) {
   for (int i = 0; i < n; i++) {
     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
@@ -240,10 +236,28 @@ int main() {
 
   cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
 
-  cout << A[990 * 3] << " " << A[990 * 3 + 1] << " " << A[990 * 3 + 2] << endl;
+  // CPU find prime
 
-  cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
-  cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
+  for (int num = 0; num < T, ++num) {
+    if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
+      primes[prime_size++] = num;
+    }
+  }
+
+  // int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  // if (idx < NumThread) {
+  //   for (int num = idx; num < T; num = num + NumThread) {
+  //     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
+  //       printf("find prime %x\n", num);
+  //       mylock.lock();
+  //       primes[(*size)++] = num;
+  //       mylock.unlock();
+  //     }
+  //   }
+  // }
+
+  // cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
+  // cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
 
   // stop the timer
   cudaEventRecord(stop);
