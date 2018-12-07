@@ -76,7 +76,7 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
         if (tmp % 3 == 0) {
           int next = num + exp;
           if (next == 981){
-            printf("Ma de, I am %d", num); 
+            printf("Ma de, I am %d, exp = %d", num, exp);  
           }
           if (A[3 * next]) {
             A[3 * (next + exp)] = true;
