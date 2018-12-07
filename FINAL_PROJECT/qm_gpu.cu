@@ -75,7 +75,7 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
 
       for (int tmp = num, exp = 1; tmp; tmp /= 3, exp *= 3) {
         // only look for pairs when the bit is 0
-        if (num == 14 && exp == 81) {
+        if (num == 14) {
           printf("I am %d, has next %d\n", num, A[3 * (num + exp)]);
         }
         if (tmp % 3 == 0) {
