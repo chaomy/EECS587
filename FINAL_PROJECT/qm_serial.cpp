@@ -60,14 +60,6 @@ void readTrueTable(string fname) {
   getline(s, line);
   out_bit_num = stoi(line);
 
-  getline(s, line, ' ');
-  getline(s, line);
-  split(line, " ", in_labels);
-
-  getline(s, line, ' ');
-  getline(s, line);
-  split(line, " ", out_labels);
-
   // std::copy(in_labels.begin(), in_labels.end(),
   // std::ostream_iterator<string>(std::cout, " "));
   // std::copy(out_labels.begin(), out_labels.end(),
@@ -97,9 +89,9 @@ int main() {
 
   int count;
   string temp;
-  vector<string> v;       // vector of strings that correponds to 1
-  unordered_set<string> prime; // 
-  vector<string> result;  // vector<char*> result;
+  vector<string> v;             // vector of strings that correponds to 1
+  unordered_set<string> prime;  //
+  vector<string> result;        // vector<char*> result;
 
   prepInput(v);
   vector<string> relative(v);
@@ -115,7 +107,8 @@ int main() {
 
   // to be parallelet
   for (int i = 0; i < 16; i++) {
-    auto it = std::find_if(buckets.begin(), buckets.end(), [](const vector<string>& a) { return a.size(); });
+    auto it = std::find_if(buckets.begin(), buckets.end(),
+                           [](const vector<string>& a) { return a.size(); });
     if (it == buckets.end()) break;
 
     vector<vector<string>> next(17);
@@ -130,8 +123,8 @@ int main() {
             flag.insert(str_a);
             flag.insert(str_b);
             str_a[res] = '2';
-            next[j].push_back(str_a); 
-            str_a[res] = '0'; 
+            next[j].push_back(str_a);
+            str_a[res] = '0';
           }
         }
         if (flag.find(str_a) == flag.end()) prime.insert(str_a);
@@ -142,7 +135,7 @@ int main() {
 
   cout << "prime " << endl;
   for (auto num : prime) cout << num << endl;
-  return 0 ; 
+  return 0;
 
   // for (int i = 0; i < relative.size(); i++) {
   //   if (relative[i].empty()) continue;
