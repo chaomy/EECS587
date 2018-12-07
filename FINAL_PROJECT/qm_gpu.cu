@@ -180,7 +180,7 @@ int main() {
   size_t nBytes = T3 * sizeof(bool);
 
   bool* A = (bool*)malloc(nBytes);
-  int* primes = (int*)malloc(1000 * sizeof(int));
+  int* primes = (int*)malloc(1000000 * sizeof(int));
   int prime_size = 0;
 
   Lock mylock;
