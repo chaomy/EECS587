@@ -1,7 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <unordered_set>
