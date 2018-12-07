@@ -158,7 +158,7 @@ inline int convertStr2Num(string s) {
 
 inline string convertTo3baseStr(int num) {
   string res(in_bit_num, '0');
-  for (int p = in_bit_num - 1; num; num /= 3) res[p--] = (num % 3);
+  for (int p = in_bit_num - 1; num; num /= 3) res[p--] = (num % 3) + '0';
   return res;
 }
 
