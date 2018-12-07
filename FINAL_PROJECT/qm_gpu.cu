@@ -264,6 +264,9 @@ int main() {
   cudaEventSynchronize(stop);
 
   for (int i = 0; i < prime_size; ++i) cout << primes[i] << endl;
+  float millisecond = 0;
+  cudaEventElapsedTime(&millisecond,start,stop);
+  cout<<"time: "<<millisecond<<" ms"<<endl;
 
   // to be parallelet
   // for (int i = 0; i < 16; i++) {
