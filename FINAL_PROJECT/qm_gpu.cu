@@ -256,11 +256,11 @@ int main() {
   cout << "time: " << millisecond << " ms" << endl;
 
   free(A);
-  free(primes); 
+  free(primes);
   cudaFree(d_primes);
   cudaFree(d_prime_size);
-  cudaFree(d_A); 
-  return 0; 
+  cudaFree(d_A);
+  return 0;
 
   // to be parallelet
   // for (int i = 0; i < 16; i++) {
