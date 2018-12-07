@@ -14,29 +14,25 @@ using std::unordered_set;
 using std::vector;
 
 /*
-	attention !!! 
-	write struct Lock{
-		...
-	}
+        attention !!!
+        write struct Lock{
+                ...
+        }
 */
-struct Lock{
-	int *mutex;
-	Lock(){
-		int state = 0;
-		cudaMalloc((void**) &mutex, sizeof(int));
-		cudaMemcpy(mutex, &state, sizeof(int), cudaMemcpyHostToDevice);
-	}
-	~Lock(){
-		cudaFree(mutex);
-	}
+__global__ struct Lock {
+  int* mutex;
+  Lock() {
+    int state = 0;
+    cudaMalloc((void**)&mutex, sizeof(int));
+    cudaMemcpy(mutex, &state, sizeof(int), cudaMemcpyHostToDevice);
+  }
+  ~Lock() { cudaFree(mutex); }
 
-	__device__ void lock(){
-		while(atomicCAS(mutex, 0 , 1) != 0);
-	}
+  __device__ void lock() {
+    while (atomicCAS(mutex, 0, 1) != 0);
+  }
 
-	__device__ void unlock(){
-		atomicExch(mutex, 0);
-	}
+  __device__ void unlock() { atomicExch(mutex, 0); }
 };
 inline void split(const string& s, const char* delim, vector<string>& v) {
   // duplicate original string, return a char pointer and free  memories
