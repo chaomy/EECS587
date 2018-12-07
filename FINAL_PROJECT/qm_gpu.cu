@@ -60,7 +60,7 @@ vector<string> input, output;
   A[num * 3 + 1], if find next
   A[num * 3 + 2], if self is found by previous
 */
-__global__ void update(bool* A, int T, int NumThread, int numof2) {
+__global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread) {
     for (int num = idx; num < T; num = num + NumThread) {
@@ -73,7 +73,7 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
 
       if (cnt_2 != numof2) continue;
 
-      for (int tmp = num, exp = 1; tmp; tmp /= 3, exp *= 3) {
+      for (int tmp = num, cnt = 0, exp = 1; cnt < numBit; tmp /= 3, exp *= 3, ++cnt) {
         // only look  for pairs when the bit is 0
         if (num == 13) {
           printf("I am %d, has %d\n", num, A[3 * (num + exp)]);
@@ -225,7 +225,7 @@ int main() {
 
   // __global__ void update(bool* A, int T, int NumThread, int numof2){
   for (int round = 0; round < in_bit_num; ++round) {
-    update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
+    update<<<grid.x, block.x>>>(d_A, T, in_bit_num, 1 << in_bit_num, round);
   }
 
   // takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, d_prime_size,
