@@ -258,10 +258,7 @@ int main() {
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
 
-  // for (auto tmp : prime) cout << tmp << endl;
-
-  std::copy(prime.begin(), prime.end(),
-            std::ostream_iterator<string>(cout, "\n"));
+  for (auto tmp : prime) cout << tmp << endl;
 
   float millisecond = 0;
   cudaEventElapsedTime(&millisecond, start, stop);
