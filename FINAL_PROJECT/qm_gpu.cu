@@ -64,6 +64,10 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread) {
     for (int num = idx; num < T; num = num + NumThread) {
+      if (num == 14) {
+        printf("I am %d, has next %d\n", num, A[3 * (num)]);
+      }
+
       if (A[3 * num] == 0) continue;
       int cnt_2 = 0;
       // convert 2 base to 3 base, count 2
@@ -75,9 +79,6 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
 
       for (int tmp = num, exp = 1; tmp; tmp /= 3, exp *= 3) {
         // only look for pairs when the bit is 0
-        if (num == 14) {
-          printf("I am %d, has next %d\n", num, A[3 * (num + exp)]);
-        }
         if (tmp % 3 == 0) {
           int next = num + exp;
           if (A[3 * next]) {
