@@ -233,12 +233,12 @@ int main() {
     update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
   }
 
-  // takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, d_prime_size,
-  //                                d_primes, mylock);
+  takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, d_prime_size,
+                                 d_primes, mylock);
 
   cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);  
   
-  cout << A[981 * 3] << " " << A[981 * 3 + 1] << " " << A[981 * 3 + 2] << endl;  
+  cout << A[990 * 3] << " " << A[990 * 3 + 1] << " " << A[990 * 3 + 2] << endl;  
 
   cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);

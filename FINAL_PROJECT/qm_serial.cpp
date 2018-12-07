@@ -97,96 +97,100 @@ int main() {
 
   int count;
   string temp;
-  vector<string> v;
-  vector<string> prime;   // vector<char*> prime;
+  vector<string> v;       // vector of strings that correponds to 1
+  unordered_set<string> prime; // 
   vector<string> result;  // vector<char*> result;
 
   prepInput(v);
   vector<string> relative(v);
-  vector<vector<int>> buckets(17);
 
-  cout << "Input " << endl; 
-  std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n")); 
+  // store according to num of 1 bits
+  vector<vector<string>> buckets(17);
+
+  cout << "Input " << endl;
+  std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
 
   for (int j = 0; j < v.size(); j++)
-    buckets[std::count(v[j].begin(), v[j].end(), '1')].push_back(j);
+    buckets[std::count(v[j].begin(), v[j].end(), '1')].push_back(v[j]);
 
   // to be parallelet
   for (int i = 0; i < 16; i++) {
-    auto it = std::find_if(buckets.begin(), buckets.end(),
-                           [](const vector<int>& a) { return a.size(); });
+    auto it = std::find_if(buckets.begin(), buckets.end(), [](const vector<string>& a) { return a.size(); });
     if (it == buckets.end()) break;
 
-    vector<vector<int>> next(17);
-    vector<bool> flag(v.size());
+    vector<vector<string>> next(17);
+    unordered_set<string> flag;
 
     // update bucket
     for (int j = 0; j < 16; ++j) {
-      for (auto a : buckets[j]) {
-        for (auto b : buckets[j + 1]) {
-          int res = checkBITs(16, v[a], v[b]);
+      for (auto str_a : buckets[j]) {
+        for (auto str_b : buckets[j + 1]) {
+          int res = checkBITs(16, str_a, str_b);
           if (res != -1) {  // can merge
-            flag[a] = 1, flag[b] = 1;
-            v[a][res] = '2';
-            next[j].push_back(a);
+            flag.insert(str_a);
+            flag.insert(str_b);
+            str_a[res] = '2';
+            next[j].push_back(str_a); 
+            str_a[res] = '0'; 
           }
         }
-        if (flag[a] == 0) prime.push_back(v[a]);
+        if (flag.find(str_a) == flag.end()) prime.insert(str_a);
       }
     }
     buckets = std::move(next);
   }
 
-  cout << "prime " << endl; 
-  for (auto num : prime) cout << num << endl; 
+  cout << "prime " << endl;
+  for (auto num : prime) cout << num << endl;
+  return 0 ; 
 
-  for (int i = 0; i < relative.size(); i++) {
-    if (relative[i].empty()) continue;
+  // for (int i = 0; i < relative.size(); i++) {
+  //   if (relative[i].empty()) continue;
 
-    int count = 0, num = 0;
-    for (int j = 0; j < prime.size(); j++) {
-      if (prime.size() && comp(16, relative[i], prime[j])) {
-        if (++count > 1) break;
-        num = j;
-      }
-    }
+  //   int count = 0, num = 0;
+  //   for (int j = 0; j < prime.size(); j++) {
+  //     if (prime.size() && comp(16, relative[i], prime[j])) {
+  //       if (++count > 1) break;
+  //       num = j;
+  //     }
+  //   }
 
-    if (count == 1) {  // essential prime implicant
-      result.push_back(prime[num]);
-      for (int j = 0; j < relative.size(); j++) {
-        if (relative[j].size() && comp(16, relative[j], prime[num])) {
-          relative[j] = "";
-        }
-      }
-      prime[num] = "";
-    }
-  }
+  //   if (count == 1) {  // essential prime implicant
+  //     result.push_back(prime[num]);
+  //     for (int j = 0; j < relative.size(); j++) {
+  //       if (relative[j].size() && comp(16, relative[j], prime[num])) {
+  //         relative[j] = "";
+  //       }
+  //     }
+  //     prime[num] = "";
+  //   }
+  // }
 
-  int cnt_empty = std::count_if(relative.begin(), relative.end(),
-                                [](string a) { return a.size() == 0; });
+  // int cnt_empty = std::count_if(relative.begin(), relative.end(),
+  //                               [](string a) { return a.size() == 0; });
 
-  while (cnt_empty < relative.size()) {
-    do {
-      temp = prime.back();
-      prime.pop_back();
-    } while (temp.size() == 0 && prime.size());
+  // while (cnt_empty < relative.size()) {
+  //   do {
+  //     temp = prime.back();
+  //     prime.pop_back();
+  //   } while (temp.size() == 0 && prime.size());
 
-    count = 0;
-    for (int i = 0; i < relative.size(); i++) {
-      if (relative[i].size() && comp(16, relative[i], temp)) {
-        relative[i] = "";
-        cnt_empty++;
-        count++;
-      }
-    }
-    if (count > 0) {
-      result.push_back(temp);
-    }
-  }
+  //   count = 0;
+  //   for (int i = 0; i < relative.size(); i++) {
+  //     if (relative[i].size() && comp(16, relative[i], temp)) {
+  //       relative[i] = "";
+  //       cnt_empty++;
+  //       count++;
+  //     }
+  //   }
+  //   if (count > 0) {
+  //     result.push_back(temp);
+  //   }
+  // }
 
-  cout << "result : " << endl;
-  for (auto item : result) cout << item << endl;
-  return 0;
+  // cout << "result : " << endl;
+  // for (auto item : result) cout << item << endl;
+  // return 0;
 }
 
 // version 1
