@@ -83,7 +83,9 @@ __global__ void takePrime(bool* A, int T, int NumThread, int* size,
   if (idx < NumThread) {
     for (int num = idx; num < T; num = num + NumThread) {
       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
-        printf("I find a prime %x \n", num); 
+        char s[10]; 
+        itoa(num, s, 3); 
+        printf("find prime %s\n", s);
         mylock.lock();
         primes[(*size)++] = num;
         mylock.unlock();

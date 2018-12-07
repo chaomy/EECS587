@@ -137,6 +137,9 @@ int main() {
     buckets = std::move(next);
   }
 
+  cout << "prime " << endl; 
+  for (auto num : prime) cout << num << endl; 
+
   for (int i = 0; i < relative.size(); i++) {
     if (relative[i].empty()) continue;
 
