@@ -123,6 +123,16 @@ int checkBITs(int n, string a, string b) {
   return count == 1 ? temp : -1;
 }
 
+void prepInput(vector<string>& v) {
+  size_t N{input.size()};
+  v.reserve(N);
+  for (int i = 0; i < N; ++i) {
+    if (output[i][0] == '1' || output[i][0] == '2') {
+      v.push_back(input[i]);
+    }
+  }
+}
+
 void readTrueTable(string fname) {
   ifstream s(fname, std::iostream::in);
   string line;
