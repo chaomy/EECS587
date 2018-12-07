@@ -5,9 +5,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <unordered_set>
 #include <vector>
-#include <iterator> 
 
 using std::cout;
 using std::endl;
@@ -16,18 +16,18 @@ using std::string;
 using std::unordered_set;
 using std::vector;
 
-inline void split(const string& s, const char* delim, vector<string>& v) {
-  // duplicate original string, return a char pointer and free  memories
-  char* dup = strdup(s.c_str());
-  char* token = strtok(dup, delim);
-  while (token != NULL) {
-    v.push_back(string(token));
-    // the call is treated as a subsequent calls to strtok:
-    // the function continues from where it left in previous invocation
-    token = strtok(NULL, delim);
-  }
-  free(dup);
-}
+// inline void split(const string& s, const char* delim, vector<string>& v) {
+//   // duplicate original string, return a char pointer and free  memories
+//   char* dup = strdup(s.c_str());
+//   char* token = strtok(dup, delim);
+//   while (token != NULL) {
+//     v.push_back(string(token));
+//     // the call is treated as a subsequent calls to strtok:
+//     // the function continues from where it left in previous invocation
+//     token = strtok(NULL, delim);
+//   }
+//   free(dup);
+// }
 
 int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
@@ -69,11 +69,10 @@ void readTrueTable(string fname) {
   // std::ostream_iterator<string>(std::cout, " "));
 
   // read head
-  while (getline(s, line) && (line != ".e")) {
-    vector<string> buff;
-    split(line, " ", buff);
-    input.push_back(buff[0]);
-    output.push_back(buff[1]);
+  string buff1, buff2;
+  while (getline(s, buff1, ' ') && getline(s, buff2) && (buff1 != ".e")) {
+    input.push_back(buff1);
+    output.push_back(buff2);
   }
 }
 
