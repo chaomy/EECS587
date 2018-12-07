@@ -263,7 +263,6 @@ int main() {
   cout << "time: " << millisecond << " ms" << endl;
 
   free(A);
-  free(primes);
   cudaFree(d_A);
   return 0;
 
