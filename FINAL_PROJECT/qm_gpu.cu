@@ -192,10 +192,6 @@ int main() {
     }
   }
 
-  free(A);
-  free(primes);
-  return 0;
-
   bool* d_A;
   int* d_primes;
   int* d_prime_size;
@@ -259,6 +255,13 @@ int main() {
   float millisecond = 0;
   cudaEventElapsedTime(&millisecond, start, stop);
   cout << "time: " << millisecond << " ms" << endl;
+
+  free(A);
+  free(primes); 
+  cudaFree(d_primes);
+  cudaFree(d_prime_size);
+  cudaFree(d_A); 
+  return 0; 
 
   // to be parallelet
   // for (int i = 0; i < 16; i++) {
