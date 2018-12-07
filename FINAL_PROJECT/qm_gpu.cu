@@ -217,8 +217,8 @@ int main() {
     update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
   }
 
-  takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, *d_prime_size,
-                                 d_primes, mylock);
+  // takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, *d_prime_size,
+  //                                d_primes, mylock);
 
   cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
