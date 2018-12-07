@@ -152,16 +152,6 @@ void readTrueTable(string fname) {
   }
 }
 
-void prepInput(vector<string>& v) {
-  size_t N{input.size()};
-  v.reserve(N);
-  for (int i = 0; i < N; ++i) {
-    if (output[i][0] == '1' || output[i][0] == '2') {
-      v.push_back(input[i]);
-    }
-  }
-}
-
 inline int convertStr2Num(string s) {
   int num{0}, base{1};
   for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') * base;
@@ -197,7 +187,10 @@ int main() {
 
   for (int i = 0; i < input.size(); ++i) {
     int in_num = convertStr2Num(input[i]);
-    if (output[i][0] == '1') A[in_num * 3] = true;
+    if (output[i][0] == '1') {
+      A[in_num * 3] = true;
+      cout << input[i] <<" " << in_num << endl; 
+    }
   }
 
   bool* d_A;
