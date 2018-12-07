@@ -214,7 +214,7 @@ int main() {
 
   // __global__ void update(bool* A, int T, int NumThread, int numof2){
   for (int round = 0; round < in_bit_num; ++round) {
-    update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
+    // update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
   }
 
   takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, *d_prime_size,
