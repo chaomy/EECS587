@@ -102,8 +102,7 @@ int main() {
   // store according to num of 1 bits
   vector<vector<string>> buckets(17);
 
-  cout << "Input " << endl;
-  std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
+  // std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
 
   for (int j = 0; j < v.size(); j++)
     buckets[std::count(v[j].begin(), v[j].end(), '1')].push_back(v[j]);
@@ -141,7 +140,6 @@ int main() {
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
   for (auto num : prime) cout << num << endl;
   cout << "time: " << duration << endl;
-  cout << "prime " << endl;
   return 0;
 
   // for (int i = 0; i < relative.size(); i++) {
