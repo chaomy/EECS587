@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <unordered_set>
 #include <vector>
-#include <ctime> 
 
 using std::cout;
 using std::endl;
@@ -138,6 +138,8 @@ int main() {
   }
 
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+
+  std::sort(prime.begin(), prime.end());
   for (auto num : prime) cout << num << endl;
   cout << "time: " << duration << endl;
   return 0;

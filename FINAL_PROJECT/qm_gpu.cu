@@ -156,6 +156,12 @@ inline int convertStr2Num(string s) {
   return num;
 }
 
+inline string convertTo3baseStr(int num) {
+  string res(in_bit_num, '0');
+  for (int p = in_bit_num - 1; num; num /= 3) res[p--] = (num % 3);
+  return res;
+}
+
 int main() {
   int BLOCK_X = 256;
   readTrueTable("input.pla");
@@ -175,8 +181,8 @@ int main() {
   size_t nBytes = T3 * sizeof(bool);
 
   bool* A = (bool*)malloc(nBytes);
-  int* primes = (int*)malloc(1000000 * sizeof(int));
-  int prime_size = 0;
+  // int* primes = (int*)malloc(1000000 * sizeof(int));
+  // int prime_size = 0;
 
   Lock mylock;
 
@@ -192,15 +198,15 @@ int main() {
   }
 
   bool* d_A;
-  int* d_primes;
-  int* d_prime_size;
+  // int* d_primes;
+  // int* d_prime_size;
 
   cudaMalloc((bool**)&d_A, nBytes);
-  cudaMalloc((int**)&d_primes, 1000000 * sizeof(int));
-  cudaMalloc((int**)&d_prime_size, sizeof(int));
+  // cudaMalloc((int**)&d_primes, 1000000 * sizeof(int));
+  // cudaMalloc((int**)&d_prime_size, sizeof(int));
 
   cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_prime_size, &prime_size, sizeof(int), cudaMemcpyHostToDevice);
+  // cudaMemcpy(d_prime_size, &prime_size, sizeof(int), cudaMemcpyHostToDevice);
 
   // block
   dim3 block(BLOCK_X, 1);
@@ -227,9 +233,10 @@ int main() {
 
   for (int num = 0; num < T; ++num) {
     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
-      primes[prime_size++] = num;
+      prime.push_back(convertTo3baseStr(num));
     }
   }
+  sort(prime.begin(), prime.end());
 
   // int idx = threadIdx.x + blockIdx.x * blockDim.x;
   // if (idx < NumThread) {
