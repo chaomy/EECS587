@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -5,8 +7,6 @@
 #include <iostream>
 #include <unordered_set>
 #include <vector>
-#include <stdio.h> 
-#include <stdlib.h> 
 
 using std::cout;
 using std::endl;
@@ -31,7 +31,8 @@ struct Lock {
   ~Lock() { cudaFree(mutex); }
 
   __device__ void lock() {
-    while (atomicCAS(mutex, 0, 1) != 0);
+    while (atomicCAS(mutex, 0, 1) != 0)
+      ;
   }
   __device__ void unlock() { atomicExch(mutex, 0); }
 };
@@ -54,15 +55,15 @@ vector<string> in_labels, out_labels;
 vector<string> input, output;
 
 /*
-  A[num * 3], existed 
-  A[num * 3 + 1], if find next 
-  A[num * 3 + 2], if self is found by previous 
+  A[num * 3], existed
+  A[num * 3 + 1], if find next
+  A[num * 3 + 2], if self is found by previous
 */
 __global__ void update(bool* A, int T, int NumThread, int numof2) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread) {
     for (int num = idx; num < T; num = num + NumThread) {
-      if (A[3 * num] == 0) continue; 
+      if (A[3 * num] == 0) continue;
       int cnt_2 = 0;
       // convert 2 base to 3 base, count 2
       for (int tmp = num; tmp; tmp /= 3) {
@@ -72,14 +73,14 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
       if (cnt_2 != numof2) continue;
 
       for (int tmp = num, exp = 1; tmp; tmp /= 3, exp *= 3) {
-        // only look for pairs when the bit is 0 
+        // only look for pairs when the bit is 0
         if (tmp % 3 == 0) {
           int next = num + exp;
-          if (next == 981){
-            printf("Ma de, I am %d, exp = %d", num, exp);  
+          if (next == 981) {
+            printf("Ma de, I am %d, next = %d, combined = %d", num, next, next + exp);
           }
           if (A[3 * next]) {
-            A[3 * next + exp] = true;
+            A[3 * (next + exp)] = true;
             A[3 * num + 1] = true;
             A[3 * next + 2] = true;
           }
@@ -89,8 +90,8 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
   }
 }
 
-__global__ void takePrime(bool* A, int T, int NumThread, int* size,
-                          int* primes, Lock mylock) {
+__global__ void takePrime(bool* A, int T, int NumThread, int* size, int* primes,
+                          Lock mylock) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread) {
     for (int num = idx; num < T; num = num + NumThread) {
@@ -202,7 +203,7 @@ int main() {
     int in_num = convertStr2Num(input[i]);
     if (output[i][0] == '1') {
       A[in_num * 3] = true;
-      cout << input[i] <<" " << in_num << endl; 
+      cout << input[i] << " " << in_num << endl;
     }
   }
 
@@ -236,9 +237,9 @@ int main() {
   takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, d_prime_size,
                                  d_primes, mylock);
 
-  cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);  
-  
-  cout << A[990 * 3] << " " << A[990 * 3 + 1] << " " << A[990 * 3 + 2] << endl;  
+  cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
+
+  cout << A[990 * 3] << " " << A[990 * 3 + 1] << " " << A[990 * 3 + 2] << endl;
 
   cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
