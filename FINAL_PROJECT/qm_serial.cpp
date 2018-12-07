@@ -139,8 +139,11 @@ int main() {
 
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
 
-  std::sort(prime.begin(), prime.end());
-  for (auto num : prime) cout << num << endl;
+  vector<string> vec_primes;
+  std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
+  std::sort(vec_primes.begin(), vec_primes.end());
+  std::copy(vec_primes.begin(), vec_primes.end(),
+            std::ostream_iterator<string>(cout, "\n"));
   cout << "time: " << duration << endl;
   return 0;
 
