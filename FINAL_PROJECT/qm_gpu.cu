@@ -79,7 +79,7 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
             printf("Ma de, I am %d, exp = %d", num, exp);  
           }
           if (A[3 * next]) {
-            A[3 * (next + exp)] = true;
+            A[3 * next + exp] = true;
             A[3 * num + 1] = true;
             A[3 * next + 2] = true;
           }
