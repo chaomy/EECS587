@@ -53,6 +53,11 @@ int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
 vector<string> input, output;
 
+/*
+  A[num * 3], existed 
+  A[num * 3 + 1], if find next 
+  A[num * 3 + 2], if self is found by previous 
+*/
 __global__ void update(bool* A, int T, int NumThread, int numof2) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread) {
@@ -222,8 +227,8 @@ int main() {
     update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
   }
 
-  takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, d_prime_size,
-                                 d_primes, mylock);
+  // takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, d_prime_size,
+  //                                d_primes, mylock);
 
   cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
