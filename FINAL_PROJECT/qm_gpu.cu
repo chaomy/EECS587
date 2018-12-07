@@ -19,7 +19,7 @@ using std::vector;
                 ...
         }
 */
-__global__ struct Lock {
+struct Lock {
   int* mutex;
   Lock() {
     int state = 0;
