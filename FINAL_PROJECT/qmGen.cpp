@@ -31,4 +31,4 @@ void writeTrueTable(string fname) {
   }
 }
 
-int main() { writeTrueTable("input.tmp"); }
+int main() { writeTrueTable("input.pla"); }
