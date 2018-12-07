@@ -1,11 +1,11 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <unordered_set>
 #include <vector>
-#include <ctime>
 
 using std::cout;
 using std::endl;
@@ -105,9 +105,9 @@ int main() {
 
   for (int j = 0; j < v.size(); j++)
     buckets[std::count(v[j].begin(), v[j].end(), '1')].push_back(v[j]);
-  
+
   std::clock_t start = std::clock();
-  
+
   // to be parallelet
   for (int i = 0; i < 16; i++) {
     auto it = std::find_if(buckets.begin(), buckets.end(),
@@ -135,10 +135,11 @@ int main() {
     }
     buckets = std::move(next);
   }
+
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-  cout << "time: "<< duration<<endl;
-  cout << "prime " << endl;
   for (auto num : prime) cout << num << endl;
+  cout << "time: " << duration << endl;
+  cout << "prime " << endl;
   return 0;
 
   // for (int i = 0; i < relative.size(); i++) {
