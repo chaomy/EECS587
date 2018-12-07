@@ -83,9 +83,9 @@ __global__ void takePrime(bool* A, int T, int NumThread, int size,
   if (idx < (1 << NumThread)) {
     for (int num = idx; num < T; num = num + (1 << NumThread)) {
       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
-        mylock.lock();
-        primes[size++] = num;
-        mylock.unlock();
+        // mylock.lock();
+        // primes[size++] = num;
+        // mylock.unlock();
       }
     }
   }
@@ -217,8 +217,8 @@ int main() {
     update<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, round);
   }
 
-  // takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, *d_prime_size,
-  //                                d_primes, mylock);
+  takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, *d_prime_size,
+                                 d_primes, mylock);
 
   cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
   cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
