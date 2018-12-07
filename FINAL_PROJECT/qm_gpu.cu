@@ -146,14 +146,6 @@ void readTrueTable(string fname) {
   getline(s, line);
   out_bit_num = stoi(line);
 
-  getline(s, line, ' ');
-  getline(s, line);
-  split(line, " ", in_labels);
-
-  getline(s, line, ' ');
-  getline(s, line);
-  split(line, " ", out_labels);
-
   // read head
   while (getline(s, line) && (line != ".e")) {
     vector<string> buff;
