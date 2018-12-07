@@ -57,6 +57,7 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread) {
     for (int num = idx; num < T; num = num + NumThread) {
+      if (A[3 * num] == 0) continue; 
       int cnt_2 = 0;
       // convert 2 base to 3 base, count 2
       for (int tmp = num; tmp; tmp /= 3) {
@@ -66,6 +67,7 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
       if (cnt_2 != numof2) continue;
 
       for (int tmp = num, exp = 1; tmp; tmp /= 3, exp *= 3) {
+        // only look for pairs when the bit is 0 
         if (tmp % 3 == 0) {
           int next = num + exp;
           if (A[3 * next]) {
