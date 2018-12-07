@@ -5,6 +5,8 @@
 #include <iostream>
 #include <unordered_set>
 #include <vector>
+#include <stdio.h> 
+#include <stdlib.h> 
 
 using std::cout;
 using std::endl;
