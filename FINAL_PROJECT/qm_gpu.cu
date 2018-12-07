@@ -167,7 +167,7 @@ int main() {
   prepInput(v);
   vector<string> relative(v);
 
-  cout << "Input " << endl;
+  // cout << "Input " << endl;
   // std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
 
   int T{static_cast<int>(pow(3, in_bit_num))};
@@ -187,7 +187,7 @@ int main() {
     int in_num = convertStr2Num(input[i]);
     if (output[i][0] == '1') {
       A[in_num * 3] = true;
-      cout << input[i] << " " << in_num << endl;
+      // cout << input[i] << " " << in_num << endl;
     }
   }
 
