@@ -196,8 +196,6 @@ int main() {
     }
   }
 
-  return 0;
-
   bool* d_A;
   int* d_primes;
   int* d_prime_size;
