@@ -84,7 +84,7 @@ __global__ void takePrime(bool* A, int T, int NumThread, int* size,
     for (int num = idx; num < T; num = num + NumThread) {
       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
         mylock.lock();
-        primes[size++] = num;
+        primes[(*size)++] = num;
         mylock.unlock();
       }
     }
