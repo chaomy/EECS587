@@ -53,8 +53,8 @@ vector<string> input, output;
 
 __global__ void update(bool* A, int T, int NumThread, int numof2) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  if (idx < (1 << NumThread)) {
-    for (int num = idx; num < T; num = num + (1 << NumThread)) {
+  if (idx < NumThread) {
+    for (int num = idx; num < T; num = num + NumThread) {
       int cnt_2 = 0;
       // convert 2 base to 3 base, count 2
       for (int tmp = num; tmp; tmp /= 3) {
@@ -80,8 +80,8 @@ __global__ void update(bool* A, int T, int NumThread, int numof2) {
 __global__ void takePrime(bool* A, int T, int NumThread, int size,
                           int* primes, Lock mylock) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  if (idx < (1 << NumThread)) {
-    for (int num = idx; num < T; num = num + (1 << NumThread)) {
+  if (idx < NumThread) {
+    for (int num = idx; num < T; num = num + NumThread) {
       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
         // mylock.lock();
         // primes[size++] = num;
