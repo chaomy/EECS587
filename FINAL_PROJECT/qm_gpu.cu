@@ -129,6 +129,7 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
       if (comp(numBit, idx, primes[i])) {
+        printf("HI, I find I am relative to prime %d\n", primes[i]);
         if (first_meet != -1) {
           first_meet = -2;
           break;
@@ -137,7 +138,6 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
       }
     }
     if (first_meet >= 0) {
-      printf("HI, I am working1\n");
       C[first_meet] = true;
     }
   }
