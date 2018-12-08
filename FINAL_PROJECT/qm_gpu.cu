@@ -149,6 +149,7 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
       if (C[primes[i]] && comp(numBit, idx, primes[i])) {
         printf("HI, I am working\n");
         B[idx] = 0;
+      }
     }
   }
 }
@@ -251,9 +252,9 @@ inline string convertTo3baseStr(int num) {
 
 struct {
   bool operator()(int a, int b) {
-    int cnta{0}, cntb{0}; 
-    for (; a ; a /= 3) cnta += (a % 3 == 2);
-    for (; b ; b /= 3) cntb += (b % 3 == 2); 
+    int cnta{0}, cntb{0};
+    for (; a; a /= 3) cnta += (a % 3 == 2);
+    for (; b; b /= 3) cntb += (b % 3 == 2);
     return cnta == cntb ? true : cnta < cntb;
   }
 } comparePrime;
