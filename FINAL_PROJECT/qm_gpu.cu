@@ -99,6 +99,14 @@ inline __device__ bool comp(int n, int num_base2, int num_base3) {
   return num_base2 == 0 && num_base3 == 0; 
 }
 
+/*
+  1. each thread looks for all primes if it only has corelation with one prime, that prime is essetial prime 
+  2. mask 
+*/ 
+__global__ void findEssentialPrimes(bool* A, bool* B, ...){
+
+}
+
 __global__ void findResults(bool* A, bool* B, bool* C, int T, int numBit, int NumThread){
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread && B[idx]){   // is a relative 
@@ -283,6 +291,9 @@ int main() {
 
   // CPU find prime
 
+  // atention!!! 
+  // first find essential prime implicate first, and delete unnecessary relatives 
+
   findResults<<<grid.x, block.x>>>(d_A, d_B, d_C, T, in_bit_num, 1 << in_bit_num); 
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
@@ -302,8 +313,6 @@ int main() {
   float millisecond = 0;
   cudaEventElapsedTime(&millisecond, start, stop);
   cout << "time: " << millisecond << " ms" << endl;
-
-
 
   free(A);
   free(B);
