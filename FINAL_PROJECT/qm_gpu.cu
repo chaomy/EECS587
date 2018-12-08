@@ -123,19 +123,33 @@ inline __device__ bool comp(int n, int num_base2, int num_base3) {
 // }
 
 __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
-                                    int prime_size, int T, int numBit,
-                                    int NumThread) {
+                                    int prime_size, int numBit, int NumThread) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  int first_meet = -1;
   if (idx < NumThread && B[idx]) {
-    int cnt = 0;
-    for (int i = prime_size - 1; i >= 0; --i)
-      if (comp(numBit, idx, primes[i]) && ++cnt > 1) break;
-
-    if (cnt == 1)
-      for (int i = prime_size - 1; i >= 0; --i) C[primes[i]] = true;
+    for (int i = prime_size - 1; i >= 0; --i) {
+      if (comp(numBit, idx, primes[i])) {
+        if (first_meet != -1) {
+          first_meet = -2;
+          break;
+        }
+        first_meet = primes[i];
+      }
+    }
+    if (first_meet >= 0) C[first_meet] = true;
   }
 }
-
+__global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
+                              int numBit, int NumThread) {
+  // C is essential primes, C[num] = '1' means num is an essential prime
+  // B is relatives
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  if (idx < NumThread && B[idx]) {
+    for (int i = prime_size - 1; i >= 0; --i) {
+      if (C[primes[i]] && comp(numBit, idx, primes[i])) B[idx] = 0;
+    }
+  }
+}
 __global__ void findResults(bool* A, bool* B, bool* C, int T, int numBit,
                             int NumThread) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -233,6 +247,14 @@ inline string convertTo3baseStr(int num) {
   return res;
 }
 
+struct {
+  bool operator()(string a, string b) {
+    size_t score_a = std::count(a.begin(), a.end(), '2');
+    size_t score_b = std::count(b.begin(), b.end(), '2');
+    return score_a == score_b ? score_a < score_b : true;
+  }
+} comparePrime;
+
 int main() {
   int BLOCK_X = 256;
   readTrueTable("input.pla");
@@ -313,14 +335,19 @@ int main() {
     }
   }
 
+  // sort based on num of '2' in the prime
+  std::sort(*primes, *(primes + avail), comparePrime);
+
   cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
   cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
 
-  // first find essential prime implicate first, 
-  findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, prime_size, T,
+  // first find essential prime implicate first,
+  findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, prime_size,
                                            in_bit_num, 1 << in_bit_num);
-  
-  // delete those relatives related to essential prime  
+
+  // delete those relatives related to essential prime
+  maskRelatives<<<grid.x, block.x>>>(d_B, d_C, d_primes, prime_size, in_bit_num,
+                                     1 << in_bit_num);
 
   // CPU find prime
   findResults<<<grid.x, block.x>>>(d_A, d_B, d_C, T, in_bit_num,
