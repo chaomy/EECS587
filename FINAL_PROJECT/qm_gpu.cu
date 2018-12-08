@@ -146,7 +146,9 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
-      if (C[primes[i]] && comp(numBit, idx, primes[i])) B[idx] = 0;
+      if (C[primes[i]] && comp(numBit, idx, primes[i])) {
+        printf("HI, I am working\n");
+        B[idx] = 0;
     }
   }
 }
