@@ -88,6 +88,31 @@ __global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
   }
 }
 
+
+inline __device__ bool comp(int n, int num_base2, int num_base3) {
+  for (; num_base2 && num_base3; num_base2 /= 2, num_base3 /= 3) {
+    int ai = num_base2 % 2;
+    int bi = num_base3 % 3; 
+    if (ai != bi && bi != 2) return false; 
+    // if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
+  }
+  return num_base2 == 0 && num_base3 == 0; 
+}
+
+__global__ void findResults(bool* A, bool* B, bool* C, int T, int numBit, int NumThread){
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  if (idx < NumThread && B[idx]){   // is a relative 
+    for (int num = T-1; num >= idx; --num){
+      if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]){  // is a prime 
+        if (comp(numBit, idx, num)){
+          C[num] = true; 
+          break;  
+        }
+      }
+    }
+  }
+}
+
 __global__ void takePrime(bool* A, int T, int NumThread, int* size, int* primes,
                           Lock mylock) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -101,6 +126,7 @@ __global__ void takePrime(bool* A, int T, int NumThread, int* size, int* primes,
     }
   }
 }
+
 
 bool comp(int n, string a, string b) {
   for (int i = 0; i < n; i++) {
@@ -151,10 +177,16 @@ void readTrueTable(string fname) {
   }
 }
 
-inline int convertStr2Num(string s) {
+inline int convertStr2NumBase3(string s) {
   int num{0}, base{1};
   for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') * base;
   return num;
+}
+
+inline int convertStr2NumBase2(string s){
+  int num{0}, base{1};
+  for (int i = s.size() - 1; i >= 0; --i, base *= 2) num += (s[i] - '0') * base;
+  return num; 
 }
 
 inline string convertTo3baseStr(int num) {
@@ -179,34 +211,46 @@ int main() {
 
   int T{static_cast<int>(pow(3, in_bit_num))};
   int T3(T * 3);
-  size_t nBytes = T3 * sizeof(bool);
+  size_t nBytes = T3 * sizeof(bool);  
+  size_t nBytesB = (1 << in_bit_num) * sizeof(bool);
+  size_t nBytesC = T * sizeof(bool);  
 
   bool* A = (bool*)malloc(nBytes);
+  bool* B = (bool*)malloc(nBytesB); 
+  bool* C = (bool*)malloc(nBytesC); 
   // int* primes = (int*)malloc(1000000 * sizeof(int));
   // int prime_size = 0;
 
-  Lock mylock;
-
   // initialize
   memset(A, false, nBytes);
+  memset(B, false, nBytesB);
+  memset(C, false, nBytesC); 
 
   for (int i = 0; i < input.size(); ++i) {
-    int in_num = convertStr2Num(input[i]);
-    if (output[i][0] == '1') {
-      A[in_num * 3] = true;
-      // cout << input[i] << " " << in_num << endl;
+    if (output[i][0] == '1' || output[i][0] == '2') {
+      int in_num_base3 = convertStr2NumBase3(input[i]);
+      int in_num_base2 = convertStr2NumBase2(input[i]); 
+      A[in_num_base3 * 3] = true;
+      B[in_num_base2] = output[i][0] == '1';  
     }
   }
 
   bool* d_A;
+  bool* d_B;
+  bool* d_C; 
+
   // int* d_primes;
   // int* d_prime_size;
 
   cudaMalloc((bool**)&d_A, nBytes);
+  cudaMalloc((bool**)&d_B, nBytesB); 
+  cudaMalloc((bool**)&d_C, nBytesC); 
   // cudaMalloc((int**)&d_primes, 1000000 * sizeof(int));
   // cudaMalloc((int**)&d_prime_size, sizeof(int));
 
   cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_B, B, nBytesB, cudaMemcpyHostToDevice); 
+  cudaMemcpy(d_C, C, nBytesC, cudaMemcpyHostToDevice); 
   // cudaMemcpy(d_prime_size, &prime_size, sizeof(int), cudaMemcpyHostToDevice);
 
   // block
@@ -228,44 +272,45 @@ int main() {
   // takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, d_prime_size,
   //                                d_primes, mylock);
 
-  cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
+  // cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
+
+  // for (int num = 0; num < T; ++num) {
+  //   if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
+  //     prime.push_back(convertTo3baseStr(num));
+  //   }
+  // }
+  // sort(prime.begin(), prime.end());
 
   // CPU find prime
 
+  findResults<<<grid.x, block.x>>>(d_A, d_B, d_C, T, in_bit_num, 1 << in_bit_num); 
+
+  cudaMemcpy(C, d_C, nBytes, cudaMemcpyDeviceToHost);
+
   for (int num = 0; num < T; ++num) {
-    if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
-      prime.push_back(convertTo3baseStr(num));
-    }
+    if (C[num]) result.push_back(convertTo3baseStr(num));
   }
-  sort(prime.begin(), prime.end());
 
-  // int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  // if (idx < NumThread) {
-  //   for (int num = idx; num < T; num = num + NumThread) {
-  //     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
-  //       printf("find prime %x\n", num);
-  //       mylock.lock();
-  //       primes[(*size)++] = num;
-  //       mylock.unlock();
-  //     }
-  //   }
-  // }
-
-  // cudaMemcpy(&prime_size, d_prime_size, sizeof(int), cudaMemcpyDeviceToHost);
-  // cudaMemcpy(primes, d_primes, 1000 * sizeof(int), cudaMemcpyDeviceToHost);
+  sort(result.begin(), result.end());
 
   // stop the timer
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
 
-  for (auto tmp : prime) cout << tmp << endl;
+  for (auto tmp : result) cout << tmp << endl;
 
   float millisecond = 0;
   cudaEventElapsedTime(&millisecond, start, stop);
   cout << "time: " << millisecond << " ms" << endl;
 
+
+
   free(A);
+  free(B);
+  free(C); 
   cudaFree(d_A);
+  cudaFree(d_C);
+  cudaFree(d_B); 
   return 0;
 
   // to be parallelet

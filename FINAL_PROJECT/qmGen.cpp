@@ -31,4 +31,7 @@ void writeTrueTable(string fname) {
   }
 }
 
-int main() { writeTrueTable("input.pla"); }
+int main(int argc, char** argv) {
+  static const int num_bits = atoi(argv[1]);
+  writeTrueTable("input.pla"); 
+}
