@@ -145,8 +145,8 @@ int main() {
     if (relative[i].empty()) continue;
 
     int count = 0, num = 0;
-    for (int j = 0; j < vec_primes.size(); j++) {
-      if (vec_primes.size() && comp(16, relative[i], vec_primes[j])) {
+    for (int j = vec_primes.size()-1; j>=0 ; --j) {
+      if (vec_primes.size() && comp(in_bit_num, relative[i], vec_primes[j])) {
         if (++count > 1) break;
         num = j;
       }
@@ -155,7 +155,7 @@ int main() {
     if (count == 1) {  // essential prime implicant
       result.push_back(vec_primes[num]);
       for (int j = 0; j < relative.size(); j++) {
-        if (relative[j].size() && comp(16, relative[j], vec_primes[num])) {
+        if (relative[j].size() && comp(in_bit_num, relative[j], vec_primes[num])) {
           relative[j] = "";
         }
       }
@@ -174,7 +174,7 @@ int main() {
 
     count = 0;
     for (int i = 0; i < relative.size(); i++) {
-      if (relative[i].size() && comp(16, relative[i], temp)) {
+      if (relative[i].size() && comp(in_bit_num, relative[i], temp)) {
         relative[i] = "";
         cnt_empty++;
         count++;
@@ -185,6 +185,7 @@ int main() {
     }
   }
 
+  sort(result.rbegin(), result.rend()); 
   cout << "result : " << endl;
   for (auto item : result) cout << item << endl;
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
