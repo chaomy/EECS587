@@ -286,7 +286,7 @@ int main() {
 
   findResults<<<grid.x, block.x>>>(d_A, d_B, d_C, T, in_bit_num, 1 << in_bit_num); 
 
-  cudaMemcpy(C, d_C, nBytes, cudaMemcpyDeviceToHost);
+  cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
   for (int num = 0; num < T; ++num) {
     if (C[num]) result.push_back(convertTo3baseStr(num));
