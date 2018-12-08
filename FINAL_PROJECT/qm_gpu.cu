@@ -127,8 +127,8 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   int first_meet = -1;
   if (idx < NumThread && B[idx]) {
+    printf("HI, I find I am relative to prime %d\n", prime_size);
     for (int i = prime_size - 1; i >= 0; --i) {
-      printf("HI, I find I am relative to prime %d\n", primes[i]);
       if (comp(numBit, idx, primes[i])) {
         if (first_meet != -1) {
           first_meet = -2;
