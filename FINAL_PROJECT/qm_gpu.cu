@@ -248,10 +248,11 @@ inline string convertTo3baseStr(int num) {
 }
 
 struct {
-  bool operator()(string a, string b) {
-    size_t score_a = std::count(a.begin(), a.end(), '2');
-    size_t score_b = std::count(b.begin(), b.end(), '2');
-    return score_a == score_b ? score_a < score_b : true;
+  bool operator()(int a, int b) {
+    int cnta{0}, cntb{0}; 
+    for (; a ; a /= 3) cnta += (a % 3 == 2);
+    for (; b ; b /= 3) cntb += (b % 3 == 2); 
+    return cnta == cntb ? true : cnta < cntb;
   }
 } comparePrime;
 
@@ -336,7 +337,7 @@ int main() {
   }
 
   // sort based on num of '2' in the prime
-  std::sort(primes, primes + avail);
+  std::sort(primes, primes + avail, comparePrime);
 
   cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
   cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
