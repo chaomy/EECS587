@@ -344,6 +344,7 @@ int main() {
 
   // sort based on num of '2' in the prime
   std::sort(primes, primes + avail, comparePrime);
+  std::copy(primes, primes + avail, std::ostream_iterator<int>(cout, "\n")); 
 
   cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
   cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
