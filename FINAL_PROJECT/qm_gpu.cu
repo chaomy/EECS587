@@ -128,8 +128,8 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
   int first_meet = -1;
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
+      printf("HI, I find I am relative to prime %d\n", primes[i]);
       if (comp(numBit, idx, primes[i])) {
-        printf("HI, I find I am relative to prime %d\n", primes[i]);
         if (first_meet != -1) {
           first_meet = -2;
           break;
@@ -186,12 +186,12 @@ __global__ void findResults(bool* A, bool* B, bool* C, int T, int numBit,
 //   }
 // }
 
-bool comp(int n, string a, string b) {
-  for (int i = 0; i < n; i++) {
-    if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
-  }
-  return true;
-}
+// bool comp(int n, string a, string b) {
+//   for (int i = 0; i < n; i++) {
+//     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
+//   }
+//   return true;
+// }
 
 int checkBITs(int n, string a, string b) {
   int count = 0, temp;
