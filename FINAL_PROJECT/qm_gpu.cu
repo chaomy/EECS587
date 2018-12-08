@@ -136,7 +136,10 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
         first_meet = primes[i];
       }
     }
-    if (first_meet >= 0) C[first_meet] = true;
+    if (first_meet >= 0) {
+      printf("HI, I am working1\n");
+      C[first_meet] = true;
+    }
   }
 }
 __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
