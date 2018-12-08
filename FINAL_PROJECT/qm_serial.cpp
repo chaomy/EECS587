@@ -140,8 +140,6 @@ int main() {
   vector<string> vec_primes;
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
   std::sort(vec_primes.begin(), vec_primes.end());
-  std::copy(vec_primes.begin(), vec_primes.end(),
-            std::ostream_iterator<string>(cout, "\n"));
 
   for (int i = 0; i < relative.size(); i++) {
     if (relative[i].empty()) continue;
