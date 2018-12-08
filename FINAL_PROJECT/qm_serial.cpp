@@ -185,7 +185,7 @@ int main() {
     }
   }
 
-  sort(result.rbegin(), result.rend()); 
+  sort(result.begin(), result.end()); 
   cout << "result : " << endl;
   for (auto item : result) cout << item << endl;
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
