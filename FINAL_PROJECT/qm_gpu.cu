@@ -127,7 +127,6 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   int first_meet = -1;
   if (idx < NumThread && B[idx]) {
-    printf("HI, I find I am relative to prime %d\n", prime_size);
     for (int i = prime_size - 1; i >= 0; --i) {
       if (comp(numBit, idx, primes[i])) {
         if (first_meet != -1) {
@@ -150,7 +149,6 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
       if (C[primes[i]] && comp(numBit, idx, primes[i])) {
-        printf("HI, I am working\n");
         B[idx] = 0;
       }
     }
@@ -343,7 +341,7 @@ int main() {
 
   // sort based on num of '2' in the prime
   std::sort(primes, primes + avail, comparePrime);
-  std::copy(primes, primes + avail, std::ostream_iterator<int>(cout, "\n")); 
+  std::copy(primes, primes + avail, std::ostream_iterator<int>(cout, "\n"));
 
   cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
   cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
