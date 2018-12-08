@@ -137,63 +137,61 @@ int main() {
     buckets = std::move(next);
   }
 
-  double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
   vector<string> vec_primes;
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
   std::sort(vec_primes.begin(), vec_primes.end());
   std::copy(vec_primes.begin(), vec_primes.end(),
             std::ostream_iterator<string>(cout, "\n"));
+
+  for (int i = 0; i < relative.size(); i++) {
+    if (relative[i].empty()) continue;
+
+    int count = 0, num = 0;
+    for (int j = 0; j < vec_primes.size(); j++) {
+      if (vec_primes.size() && comp(16, relative[i], vec_primes[j])) {
+        if (++count > 1) break;
+        num = j;
+      }
+    }
+
+    if (count == 1) {  // essential prime implicant
+      result.push_back(vec_primes[num]);
+      for (int j = 0; j < relative.size(); j++) {
+        if (relative[j].size() && comp(16, relative[j], vec_primes[num])) {
+          relative[j] = "";
+        }
+      }
+      vec_primes[num] = "";
+    }
+  }
+
+  int cnt_empty = std::count_if(relative.begin(), relative.end(),
+                                [](string a) { return a.size() == 0; });
+
+  while (cnt_empty < relative.size()) {
+    do {
+      temp = vec_primes.back();
+      vec_primes.pop_back();
+    } while (temp.size() == 0 && vec_primes.size());
+
+    count = 0;
+    for (int i = 0; i < relative.size(); i++) {
+      if (relative[i].size() && comp(16, relative[i], temp)) {
+        relative[i] = "";
+        cnt_empty++;
+        count++;
+      }
+    }
+    if (count > 0) {
+      result.push_back(temp);
+    }
+  }
+
+  cout << "result : " << endl;
+  for (auto item : result) cout << item << endl;
+  double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
   cout << "time: " << duration << endl;
   return 0;
-
-  // for (int i = 0; i < relative.size(); i++) {
-  //   if (relative[i].empty()) continue;
-
-  //   int count = 0, num = 0;
-  //   for (int j = 0; j < prime.size(); j++) {
-  //     if (prime.size() && comp(16, relative[i], prime[j])) {
-  //       if (++count > 1) break;
-  //       num = j;
-  //     }
-  //   }
-
-  //   if (count == 1) {  // essential prime implicant
-  //     result.push_back(prime[num]);
-  //     for (int j = 0; j < relative.size(); j++) {
-  //       if (relative[j].size() && comp(16, relative[j], prime[num])) {
-  //         relative[j] = "";
-  //       }
-  //     }
-  //     prime[num] = "";
-  //   }
-  // }
-
-  // int cnt_empty = std::count_if(relative.begin(), relative.end(),
-  //                               [](string a) { return a.size() == 0; });
-
-  // while (cnt_empty < relative.size()) {
-  //   do {
-  //     temp = prime.back();
-  //     prime.pop_back();
-  //   } while (temp.size() == 0 && prime.size());
-
-  //   count = 0;
-  //   for (int i = 0; i < relative.size(); i++) {
-  //     if (relative[i].size() && comp(16, relative[i], temp)) {
-  //       relative[i] = "";
-  //       cnt_empty++;
-  //       count++;
-  //     }
-  //   }
-  //   if (count > 0) {
-  //     result.push_back(temp);
-  //   }
-  // }
-
-  // cout << "result : " << endl;
-  // for (auto item : result) cout << item << endl;
-  // return 0;
 }
 
 // version 1
