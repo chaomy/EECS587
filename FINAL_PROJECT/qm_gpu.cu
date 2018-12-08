@@ -73,8 +73,9 @@ __global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
 
       if (cnt_2 != numof2) continue;
 
-      for (int tmp = num, cnt = 0, exp = 1; cnt < numBit; tmp /= 3, exp *= 3, ++cnt) {
-        // only look  for pairs when the bit is 0        
+      for (int tmp = num, cnt = 0, exp = 1; cnt < numBit;
+           tmp /= 3, exp *= 3, ++cnt) {
+        // only look  for pairs when the bit is 0
         if (tmp % 3 == 0) {
           int next = num + exp;
           if (A[3 * next]) {
@@ -88,53 +89,82 @@ __global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
   }
 }
 
-
 inline __device__ bool comp(int n, int num_base2, int num_base3) {
   for (; num_base2 && num_base3; num_base2 /= 2, num_base3 /= 3) {
     int ai = num_base2 % 2;
-    int bi = num_base3 % 3; 
-    if (ai != bi && bi != 2) return false; 
+    int bi = num_base3 % 3;
+    if (ai != bi && bi != 2) return false;
     // if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
   }
-  return num_base2 == 0 && num_base3 == 0; 
+  return num_base2 == 0 && num_base3 == 0;
 }
 
 /*
-  1. each thread looks for all primes if it only has corelation with one prime, that prime is essetial prime 
-  2. mask 
-*/ 
-__global__ void findEssentialPrimes(bool* A, bool* B, ...){
+  1. each thread looks for all primes if it only has corelation with one prime,
+  that prime is essetial prime
+  2. mask
+*/
+// __global__ void findEssentialPrimes(bool* A, bool* B, bool* C, int T,
+//                                     int numBit, int NumThread) {
+//   int idx = threadIdx.x + blockIdx.x * blockDim.x;
+//   if (idx < NumThread && B[idx]) {
+//     int cnt = 0;
+//     for (int num = T - 1; num >= 0; --num) {
+//       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
+//         if (comp(numBit, idx, num) && ++cnt > 1) break;
+//       }
+//     }
+//     if (cnt == 1) {
+//       for (int num = T - 1; num >= 0; --num) {
+//         if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) C[num] = true;
+//       }
+//     }
+//   }
+// }
 
+__global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
+                                    int prime_size, int T, int numBit,
+                                    int NumThread) {
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  if (idx < NumThread && B[idx]) {
+    int cnt = 0;
+    for (int i = prime_size - 1; i >= 0; --i)
+      if (comp(numBit, idx, primes[i]) && ++cnt > 1) break;
+
+    if (cnt == 1)
+      for (int i = prime_size - 1; i >= 0; --i) C[primes[i]] = true;
+  }
 }
 
-__global__ void findResults(bool* A, bool* B, bool* C, int T, int numBit, int NumThread){
+__global__ void findResults(bool* A, bool* B, bool* C, int T, int numBit,
+                            int NumThread) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  if (idx < NumThread && B[idx]){   // is a relative 
-    for (int num = T-1; num >= idx; --num){
-      if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]){  // is a prime 
-        if (comp(numBit, idx, num)){
-          C[num] = true; 
-          break;  
+  if (idx < NumThread && B[idx]) {  // is a relative
+    for (int num = T - 1; num >= idx; --num) {
+      if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {  // is a prime
+        if (comp(numBit, idx, num)) {
+          C[num] = true;
+          break;
         }
       }
     }
   }
 }
 
-__global__ void takePrime(bool* A, int T, int NumThread, int* size, int* primes,
-                          Lock mylock) {
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  if (idx < NumThread) {
-    for (int num = idx; num < T; num = num + NumThread) {
-      if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
-        mylock.lock();
-        primes[(*size)++] = num;
-        mylock.unlock();
-      }
-    }
-  }
-}
-
+// __global__ void takePrime(bool* A, int T, int NumThread, int* size, int*
+// primes,
+//                           Lock mylock) {
+//   int idx = threadIdx.x + blockIdx.x * blockDim.x;
+//   if (idx < NumThread) {
+//     for (int num = idx; num < T; num = num + NumThread) {
+//       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
+//         mylock.lock();
+//         primes[(*size)++] = num;
+//         mylock.unlock();
+//       }
+//     }
+//   }
+// }
 
 bool comp(int n, string a, string b) {
   for (int i = 0; i < n; i++) {
@@ -191,10 +221,10 @@ inline int convertStr2NumBase3(string s) {
   return num;
 }
 
-inline int convertStr2NumBase2(string s){
+inline int convertStr2NumBase2(string s) {
   int num{0}, base{1};
   for (int i = s.size() - 1; i >= 0; --i, base *= 2) num += (s[i] - '0') * base;
-  return num; 
+  return num;
 }
 
 inline string convertTo3baseStr(int num) {
@@ -219,47 +249,45 @@ int main() {
 
   int T{static_cast<int>(pow(3, in_bit_num))};
   int T3(T * 3);
-  size_t nBytes = T3 * sizeof(bool);  
+  int prime_size_limit{1000000};
+
+  size_t nBytes = T3 * sizeof(bool);
   size_t nBytesB = (1 << in_bit_num) * sizeof(bool);
-  size_t nBytesC = T * sizeof(bool);  
+  size_t nBytesC = T * sizeof(bool);
 
   bool* A = (bool*)malloc(nBytes);
-  bool* B = (bool*)malloc(nBytesB); 
-  bool* C = (bool*)malloc(nBytesC); 
-  // int* primes = (int*)malloc(1000000 * sizeof(int));
-  // int prime_size = 0;
+  bool* B = (bool*)malloc(nBytesB);
+  bool* C = (bool*)malloc(nBytesC);
+
+  int* primes = (int*)malloc(prime_size_limit * sizeof(int));
+  int prime_size = 0;
 
   // initialize
   memset(A, false, nBytes);
   memset(B, false, nBytesB);
-  memset(C, false, nBytesC); 
+  memset(C, false, nBytesC);
 
   for (int i = 0; i < input.size(); ++i) {
     if (output[i][0] == '1' || output[i][0] == '2') {
       int in_num_base3 = convertStr2NumBase3(input[i]);
-      int in_num_base2 = convertStr2NumBase2(input[i]); 
+      int in_num_base2 = convertStr2NumBase2(input[i]);
       A[in_num_base3 * 3] = true;
-      B[in_num_base2] = output[i][0] == '1';  
+      B[in_num_base2] = output[i][0] == '1';
     }
   }
 
-  bool* d_A;
-  bool* d_B;
-  bool* d_C; 
-
-  // int* d_primes;
-  // int* d_prime_size;
+  bool* d_A;      // whole space
+  bool* d_B;      // mark relative
+  bool* d_C;      // mark final results
+  int* d_primes;  // vector of primes implicates
 
   cudaMalloc((bool**)&d_A, nBytes);
-  cudaMalloc((bool**)&d_B, nBytesB); 
-  cudaMalloc((bool**)&d_C, nBytesC); 
-  // cudaMalloc((int**)&d_primes, 1000000 * sizeof(int));
-  // cudaMalloc((int**)&d_prime_size, sizeof(int));
+  cudaMalloc((bool**)&d_B, nBytesB);
+  cudaMalloc((bool**)&d_C, nBytesC);
 
   cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_B, B, nBytesB, cudaMemcpyHostToDevice); 
-  cudaMemcpy(d_C, C, nBytesC, cudaMemcpyHostToDevice); 
-  // cudaMemcpy(d_prime_size, &prime_size, sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_B, B, nBytesB, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_C, C, nBytesC, cudaMemcpyHostToDevice);
 
   // block
   dim3 block(BLOCK_X, 1);
@@ -272,29 +300,31 @@ int main() {
   // start the timer
   cudaEventRecord(start);
 
-  // __global__ void update(bool* A, int T, int NumThread, int numof2){
   for (int round = 0; round < in_bit_num; ++round) {
     update<<<grid.x, block.x>>>(d_A, T, in_bit_num, 1 << in_bit_num, round);
   }
 
-  // takePrime<<<grid.x, block.x>>>(d_A, T, 1 << in_bit_num, d_prime_size,
-  //                                d_primes, mylock);
+  cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
 
-  // cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
+  int avail = 0;
+  for (int num = 0; num < T; ++num) {
+    if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
+      primes[avail++] = num;
+    }
+  }
 
-  // for (int num = 0; num < T; ++num) {
-  //   if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
-  //     prime.push_back(convertTo3baseStr(num));
-  //   }
-  // }
-  // sort(prime.begin(), prime.end());
+  cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
+  cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
+
+  // first find essential prime implicate first, 
+  findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, prime_size, T,
+                                           in_bit_num, 1 << in_bit_num);
+  
+  // delete those relatives related to essential prime  
 
   // CPU find prime
-
-  // atention!!! 
-  // first find essential prime implicate first, and delete unnecessary relatives 
-
-  findResults<<<grid.x, block.x>>>(d_A, d_B, d_C, T, in_bit_num, 1 << in_bit_num); 
+  findResults<<<grid.x, block.x>>>(d_A, d_B, d_C, T, in_bit_num,
+                                   1 << in_bit_num);
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
@@ -316,10 +346,10 @@ int main() {
 
   free(A);
   free(B);
-  free(C); 
+  free(C);
   cudaFree(d_A);
   cudaFree(d_C);
-  cudaFree(d_B); 
+  cudaFree(d_B);
   return 0;
 
   // to be parallelet

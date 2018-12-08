@@ -17,19 +17,6 @@ using std::string;
 using std::unordered_set;
 using std::vector;
 
-// inline void split(const string& s, const char* delim, vector<string>& v) {
-//   // duplicate original string, return a char pointer and free  memories
-//   char* dup = strdup(s.c_str());
-//   char* token = strtok(dup, delim);
-//   while (token != NULL) {
-//     v.push_back(string(token));
-//     // the call is treated as a subsequent calls to strtok:
-//     // the function continues from where it left in previous invocation
-//     token = strtok(NULL, delim);
-//   }
-//   free(dup);
-// }
-
 int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
 vector<string> input, output;
@@ -64,11 +51,6 @@ void readTrueTable(string fname) {
   getline(s, line);
   out_bit_num = stoi(line);
 
-  // std::copy(in_labels.begin(), in_labels.end(),
-  // std::ostream_iterator<string>(std::cout, " "));
-  // std::copy(out_labels.begin(), out_labels.end(),
-  // std::ostream_iterator<string>(std::cout, " "));
-
   // read head
   string buff1, buff2;
   while (getline(s, buff1, ' ') && getline(s, buff2) && (buff1 != ".e")) {
@@ -87,27 +69,22 @@ void prepInput(vector<string>& v) {
   }
 }
 
-int main() {
-  readTrueTable("input.pla");
+struct {
+  bool operator()(string a, string b) {
+    size_t score_a = std::count(a.begin(), a.end(), '2');
+    size_t score_b = std::count(b.begin(), b.end(), '2');
+    return score_a == score_b ? score_a < score_b : true;
+  }
+} comparePrime;
 
-  int count;
-  string temp;
-  vector<string> v;             // vector of strings that correponds to 1
-  unordered_set<string> prime;  //
-  vector<string> result;        // vector<char*> result;
-
-  prepInput(v);
-  vector<string> relative(v);
-
-  // store according to num of 1 bits
+// QM step 1
+void find_primes(vector<string>& v, vector<string>& vec_primes) {
   vector<vector<string>> buckets(17);
 
-  // std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
-
+  // store according to num of 1 bits
+  unordered_set<string> prime;
   for (int j = 0; j < v.size(); j++)
     buckets[std::count(v[j].begin(), v[j].end(), '1')].push_back(v[j]);
-
-  std::clock_t start = std::clock();
 
   // to be parallelet
   for (int i = 0; i < 16; i++) {
@@ -136,43 +113,24 @@ int main() {
     }
     buckets = std::move(next);
   }
-
-  vector<string> vec_primes;
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
-  std::sort(vec_primes.begin(), vec_primes.end());
+  std::sort(vec_primes.begin(), vec_primes.end(), comparePrime);
+}
 
-  for (int i = 0; i < relative.size(); i++) {
-    if (relative[i].empty()) continue;
-
-    int count = 0, num = 0;
-    for (int j = vec_primes.size()-1; j>=0 ; --j) {
-      if (vec_primes.size() && comp(in_bit_num, relative[i], vec_primes[j])) {
-        if (++count > 1) break;
-        num = j;
-      }
-    }
-
-    if (count == 1) {  // essential prime implicant
-      result.push_back(vec_primes[num]);
-      for (int j = 0; j < relative.size(); j++) {
-        if (relative[j].size() && comp(in_bit_num, relative[j], vec_primes[num])) {
-          relative[j] = "";
-        }
-      }
-      vec_primes[num] = "";
-    }
-  }
-
+// solve set cover problem by finding one solution
+void solve_set_cover_one_solution(vector<string>& relative,
+                                  vector<string>& vec_primes,
+                                  vector<string>& result) {
   int cnt_empty = std::count_if(relative.begin(), relative.end(),
                                 [](string a) { return a.size() == 0; });
-
+  string temp;
   while (cnt_empty < relative.size()) {
     do {
       temp = vec_primes.back();
       vec_primes.pop_back();
     } while (temp.size() == 0 && vec_primes.size());
 
-    count = 0;
+    int count = 0;
     for (int i = 0; i < relative.size(); i++) {
       if (relative[i].size() && comp(in_bit_num, relative[i], temp)) {
         relative[i] = "";
@@ -184,30 +142,77 @@ int main() {
       result.push_back(temp);
     }
   }
+}
 
-  sort(result.begin(), result.end()); 
-  for (auto item : result) cout << item << endl;
+/*
+1) Let I represents set of elements included so far.  Initialize I = {}
+
+2) Do following while I is not same as U.
+    a) Find the set Si in {S1, S2, ... Sm} whose cost effectiveness is
+       smallest, i.e., the ratio of cost C(Si) and number of newly added
+       elements is minimum.
+       Basically we pick the set for which following value is minimum.
+       Cost(Si) / |Si - I|
+    b) Add elements of above picked Si to I, i.e.,  I = I U Si
+*/
+
+void solve_set_cover_approx_greedy(vector<string>& relative,
+                                   vector<string>& vec_primes,
+                                   vector<string>& result) {}
+
+// QM step 2
+void find_results(vector<string>& vec_primes, vector<string>& relative,
+                  vector<string>& result) {
+  // find essential prime implicates
+  for (int i = 0; i < relative.size(); i++) {
+    if (relative[i].empty()) continue;
+
+    int count = 0, num = 0;
+    for (int j = vec_primes.size() - 1; j >= 0; --j) {
+      if (vec_primes.size() && comp(in_bit_num, relative[i], vec_primes[j])) {
+        if (++count > 1) break;
+        num = j;
+      }
+    }
+
+    if (count == 1) {  // essential prime implicant
+      result.push_back(vec_primes[num]);
+      for (int j = 0; j < relative.size(); j++) {
+        if (relative[j].size() &&
+            comp(in_bit_num, relative[j], vec_primes[num])) {
+          relative[j] = "";
+        }
+      }
+      vec_primes[num] = "";
+    }
+  }
+
+  solve_set_cover_one_solution(relative, vec_primes, result);
+}
+
+int main() {
+  readTrueTable("input.pla");
+
+  int count;
+  vector<string> v;           // vector of strings that correponds to 1
+  vector<string> vec_primes;  // primes in string format
+  vector<string> result;      // vector<char*> result;
+
+  prepInput(v);
+  vector<string> relative(v);
+
+  std::clock_t start = std::clock();
+
+  // step 1
+  find_primes(v, vec_primes);
+
+  // step 2
+  find_results(vec_primes, relative, result);
+
   double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+
+  sort(result.begin(), result.end());
+  for (auto item : result) cout << item << endl;
   cout << "time: " << duration << endl;
   return 0;
 }
-
-// version 1
-// bool* flag = new bool[v.size()];  // be able to improve
-// for (int k = j + 1; k < v.size(); k++) {
-//   int impt = imp(n, v[j], v[k]);
-//   if (impt != -1) {
-//     flag[j] = 1;
-//     flag[k] = 1;
-//     strcpy(temp, v[j]);
-//     temp[impt] = '2';
-//     if (find(v[i + 1].begin(), v[i + 1].end(), temp) == v[i + 1].end())
-//       v[i + 1].push_back(temp);
-//   }
-// }
-
-// for (int j = 0; j < v.size(); j++) {
-//   if (!flag[j]) {
-//     prime.push_back(v[j]);
-//   }
-// }
