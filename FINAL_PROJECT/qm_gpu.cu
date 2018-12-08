@@ -289,7 +289,6 @@ int main() {
   bool* C = (bool*)malloc(nBytesC);
 
   int* primes = (int*)malloc(prime_size_limit * sizeof(int));
-  int prime_size = 0;
 
   // initialize
   memset(A, false, nBytes);
@@ -350,11 +349,11 @@ int main() {
   cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
 
   // first find essential prime implicate first,
-  findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, prime_size,
+  findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail,
                                            in_bit_num, 1 << in_bit_num);
 
   // delete those relatives related to essential prime
-  maskRelatives<<<grid.x, block.x>>>(d_B, d_C, d_primes, prime_size, in_bit_num,
+  maskRelatives<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail, in_bit_num,
                                      1 << in_bit_num);
 
   // CPU find prime
