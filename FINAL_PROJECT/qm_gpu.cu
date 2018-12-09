@@ -346,6 +346,14 @@ int main() {
   // first find essential prime implicate first,
   findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail,
                                            in_bit_num, 1 << in_bit_num);
+  
+  free(A);
+  free(B);
+  free(C);
+  cudaFree(d_A);
+  cudaFree(d_C);
+  cudaFree(d_B);
+  return 0;
 
   // delete those relatives related to essential prime
   maskRelatives<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail, in_bit_num,
