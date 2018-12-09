@@ -137,8 +137,6 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
     }
     if (first_meet >= 0) {
       C[first_meet] = true;
-      printf("first meet index is %d, base 3, I am thread %d\n", first_meet,
-             idx);
     }
   }
 }
@@ -150,9 +148,6 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
       if (C[primes[i]] && comp(numBit, idx, primes[i])) {
-        if (idx == 7) {
-          printf("ma de I am %d, removed by %d\n", idx, primes[i]);
-        }
         B[idx] = 0;
       }
     }
@@ -163,7 +158,6 @@ __global__ void findResults(bool* B, bool* C, int* primes, int prime_size,
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread && B[idx]) {  // is a relative
     for (int i = prime_size - 1; i >= 0; --i) {
-      if (idx == 7 && primes[i] == 175) printf("I am goooooood \n");
       if (comp(numBit, idx, primes[i])) {
         C[primes[i]] = true;
         break;
