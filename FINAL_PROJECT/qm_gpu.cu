@@ -327,22 +327,27 @@ int main() {
     update<<<grid.x, block.x>>>(d_A, T, in_bit_num, 1 << in_bit_num, round);
   }
 
-  free(A);
-  free(B);
-  free(C);
-  cudaFree(d_A);
-  cudaFree(d_C);
-  cudaFree(d_B);
-  return 0;
-
   cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
 
   int avail = 0;
   for (int num = 0; num < T; ++num) {
     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
       primes[avail++] = num;
+      if (avail == prime_size_limit){
+        cout<<"wo kao !" <<endl; 
+      free(A);
+      free(B);
+      free(C);
+      cudaFree(d_A);
+      cudaFree(d_C);
+      cudaFree(d_B);
+      return 0;
+
+      }
     }
   }
+
+
 
   // sort based on num of '2' in the prime
   std::sort(primes, primes + avail, comparePrime);
