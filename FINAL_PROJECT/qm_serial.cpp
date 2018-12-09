@@ -74,7 +74,7 @@ struct {
   bool operator()(string a, string b) {
     size_t score_a = std::count(a.begin(), a.end(), '2');
     size_t score_b = std::count(b.begin(), b.end(), '2');
-    return score_a == score_b ? true : score_a < score_b;
+    return score_a == score_b ? false : score_a < score_b;
   }
 } comparePrime;
 
