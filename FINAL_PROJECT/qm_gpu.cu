@@ -390,81 +390,81 @@ int main() {
   cudaFree(d_C);
   cudaFree(d_B);
   return 0;
-
-  // to be parallelet
-  // for (int i = 0; i < 16; i++) {
-  //   auto it = std::find_if(buckets.begin(), buckets.end(),
-  //                          [](const vector<int>& a) { return a.size(); });
-  //   if (it == buckets.end()) break;
-
-  //   vector<vector<int>> next(17);
-  //   vector<bool> flag(v.size());
-
-  //   // update bucket
-  //   for (int j = 0; j < 16; ++j) {
-  //     for (auto a : buckets[j]) {
-  //       for (auto b : buckets[j + 1]) {
-  //         int res = checkBITs(16, v[a], v[b]);
-  //         if (res != -1) {  // can merge
-  //           flag[a] = 1, flag[b] = 1;
-  //           v[a][res] = '2';
-  //           next[j].push_back(a);
-  //         }
-  //       }
-  //       if (flag[a] == 0) prime.push_back(v[a]);
-  //     }
-  //   }
-  //   buckets = std::move(next);
-  // }
-
-  // int count;
-  // string temp;
-
-  // for (int i = 0; i < relative.size(); i++) {
-  //   if (relative[i].empty()) continue;
-
-  //   int count = 0, num = 0;
-  //   for (int j = 0; j < prime.size(); j++) {
-  //     if (prime.size() && comp(16, relative[i], prime[j])) {
-  //       if (++count > 1) break;
-  //       num = j;
-  //     }
-  //   }
-
-  //   if (count == 1) {  // essential prime implicant
-  //     result.push_back(prime[num]);
-  //     for (int j = 0; j < relative.size(); j++) {
-  //       if (relative[j].size() && comp(16, relative[j], prime[num])) {
-  //         relative[j] = "";
-  //       }
-  //     }
-  //     prime[num] = "";
-  //   }
-  // }
-
-  // int cnt_empty = std::count_if(relative.begin(), relative.end(),
-  //                               [](string a) { return a.size() == 0; });
-
-  // while (cnt_empty < relative.size()) {
-  //   do {
-  //     temp = prime.back();
-  //     prime.pop_back();
-  //   } while (temp.size() == 0 && prime.size());
-
-  //   count = 0;
-  //   for (int i = 0; i < relative.size(); i++) {
-  //     if (relative[i].size() && comp(16, relative[i], temp)) {
-  //       relative[i] = "";
-  //       cnt_empty++;
-  //       count++;
-  //     }
-  //   }
-  //   if (count > 0) {
-  //     result.push_back(temp);
-  //   }
-  // }
-
-  // cout << "result : " << endl;
-  // for (auto item : result) cout << item << endl;
-  // return 0;
 }
+
+// to be parallelet
+// for (int i = 0; i < 16; i++) {
+//   auto it = std::find_if(buckets.begin(), buckets.end(),
+//                          [](const vector<int>& a) { return a.size(); });
+//   if (it == buckets.end()) break;
+
+//   vector<vector<int>> next(17);
+//   vector<bool> flag(v.size());
+
+//   // update bucket
+//   for (int j = 0; j < 16; ++j) {
+//     for (auto a : buckets[j]) {
+//       for (auto b : buckets[j + 1]) {
+//         int res = checkBITs(16, v[a], v[b]);
+//         if (res != -1) {  // can merge
+//           flag[a] = 1, flag[b] = 1;
+//           v[a][res] = '2';
+//           next[j].push_back(a);
+//         }
+//       }
+//       if (flag[a] == 0) prime.push_back(v[a]);
+//     }
+//   }
+//   buckets = std::move(next);
+// }
+
+// int count;
+// string temp;
+
+// for (int i = 0; i < relative.size(); i++) {
+//   if (relative[i].empty()) continue;
+
+//   int count = 0, num = 0;
+//   for (int j = 0; j < prime.size(); j++) {
+//     if (prime.size() && comp(16, relative[i], prime[j])) {
+//       if (++count > 1) break;
+//       num = j;
+//     }
+//   }
+
+//   if (count == 1) {  // essential prime implicant
+//     result.push_back(prime[num]);
+//     for (int j = 0; j < relative.size(); j++) {
+//       if (relative[j].size() && comp(16, relative[j], prime[num])) {
+//         relative[j] = "";
+//       }
+//     }
+//     prime[num] = "";
+//   }
+// }
+
+// int cnt_empty = std::count_if(relative.begin(), relative.end(),
+//                               [](string a) { return a.size() == 0; });
+
+// while (cnt_empty < relative.size()) {
+//   do {
+//     temp = prime.back();
+//     prime.pop_back();
+//   } while (temp.size() == 0 && prime.size());
+
+//   count = 0;
+//   for (int i = 0; i < relative.size(); i++) {
+//     if (relative[i].size() && comp(16, relative[i], temp)) {
+//       relative[i] = "";
+//       cnt_empty++;
+//       count++;
+//     }
+//   }
+//   if (count > 0) {
+//     result.push_back(temp);
+//   }
+// }
+
+// cout << "result : " << endl;
+// for (auto item : result) cout << item << endl;
+// return 0;
