@@ -327,6 +327,14 @@ int main() {
     update<<<grid.x, block.x>>>(d_A, T, in_bit_num, 1 << in_bit_num, round);
   }
 
+  free(A);
+  free(B);
+  free(C);
+  cudaFree(d_A);
+  cudaFree(d_C);
+  cudaFree(d_B);
+  return 0;
+
   cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
 
   int avail = 0;
@@ -339,14 +347,6 @@ int main() {
   // sort based on num of '2' in the prime
   std::sort(primes, primes + avail, comparePrime);
   // std::copy(primes, primes + avail, std::ostream_iterator<int>(cout, "\n"));
-
-  free(A);
-  free(B);
-  free(C);
-  cudaFree(d_A);
-  cudaFree(d_C);
-  cudaFree(d_B);
-  return 0;
 
   cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
   cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
