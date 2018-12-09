@@ -273,7 +273,7 @@ int main() {
 
   int T{static_cast<int>(pow(3, in_bit_num))};
   int T3(T * 3);
-  int prime_size_limit{1000000};
+  int prime_size_limit{10000000};
 
   size_t nBytes = T3 * sizeof(bool);
   size_t nBytesB = (1 << in_bit_num) * sizeof(bool);
