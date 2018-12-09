@@ -340,13 +340,6 @@ int main() {
   std::sort(primes, primes + avail, comparePrime);
   // std::copy(primes, primes + avail, std::ostream_iterator<int>(cout, "\n"));
 
-  cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
-  cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
-
-  // first find essential prime implicate first,
-  findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail,
-                                           in_bit_num, 1 << in_bit_num);
-  
   free(A);
   free(B);
   free(C);
@@ -354,6 +347,13 @@ int main() {
   cudaFree(d_C);
   cudaFree(d_B);
   return 0;
+
+  cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
+  cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
+
+  // first find essential prime implicate first,
+  findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail,
+                                           in_bit_num, 1 << in_bit_num);
 
   // delete those relatives related to essential prime
   maskRelatives<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail, in_bit_num,
