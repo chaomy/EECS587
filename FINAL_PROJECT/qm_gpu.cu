@@ -333,8 +333,8 @@ int main() {
   for (int num = 0; num < T; ++num) {
     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
       primes[avail++] = num;
-      if (avail == prime_size_limit - 5) {
-        cout << "wo kao !" << endl;
+      if (avail == 0.5 * prime_size_limit) {
+        cout << avail << endl;
         free(A);
         free(B);
         free(C);
