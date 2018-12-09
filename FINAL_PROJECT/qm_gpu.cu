@@ -138,6 +138,7 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
     }
     if (first_meet >= 0) {
       C[first_meet] = true;
+      printf("first meet index is %d, base 3\n", first_meet);
     }
   }
 }
