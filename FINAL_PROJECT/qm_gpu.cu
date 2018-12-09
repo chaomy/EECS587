@@ -90,13 +90,12 @@ __global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
 }
 
 inline __device__ bool comp(int n, int num_base2, int num_base3) {
-  for (; num_base2 && num_base3; num_base2 /= 2, num_base3 /= 3) {
+  for (; num_base2 || num_base3; num_base2 /= 2, num_base3 /= 3) {
     int ai = num_base2 % 2;
     int bi = num_base3 % 3;
     if (ai != bi && bi != 2) return false;
-    // if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
   }
-  return num_base2 == 0 && num_base3 == 0;
+  return true;
 }
 
 /*
@@ -159,7 +158,8 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
     }
   }
 }
-__global__ void findResults(bool* B, bool* C, int* primes, int prime_size, int numBit, int NumThread) {
+__global__ void findResults(bool* B, bool* C, int* primes, int prime_size,
+                            int numBit, int NumThread) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread && B[idx]) {  // is a relative
     for (int i = prime_size - 1; i >= 0; --i) {
@@ -359,7 +359,7 @@ int main() {
 
   // CPU find prime
   findResults<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail, in_bit_num,
-                                     1 << in_bit_num);
+                                   1 << in_bit_num);
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
