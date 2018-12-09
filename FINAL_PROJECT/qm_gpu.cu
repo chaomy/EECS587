@@ -253,7 +253,7 @@ struct {
     int cnta{0}, cntb{0};
     for (; a; a /= 3) cnta += (a % 3 == 2);
     for (; b; b /= 3) cntb += (b % 3 == 2);
-    return cnta == cntb ? true : cnta < cntb;
+    return cnta == cntb ? false : cnta < cntb;
   }
 } comparePrime;
 
