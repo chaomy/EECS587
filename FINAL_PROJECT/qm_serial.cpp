@@ -53,7 +53,7 @@ void readTrueTable(string fname) {
 
   // read head
   string buff1, buff2;
-  while (getline(s, buff1, ' ') && getline(s, buff2) && (buff1 != ".e")) {
+  while (getline(s, buff1, ' ') && getline(s, buff2)) {
     input.push_back(buff1);
     output.push_back(buff2);
   }
@@ -62,6 +62,7 @@ void readTrueTable(string fname) {
 void prepInput(vector<string>& v) {
   size_t N{input.size()};
   v.reserve(N);
+
   for (int i = 0; i < N; ++i) {
     if (output[i][0] == '1' || output[i][0] == '2') {
       v.push_back(input[i]);
@@ -83,8 +84,9 @@ void find_primes(vector<string>& v, vector<string>& vec_primes) {
 
   // store according to num of 1 bits
   unordered_set<string> prime;
-  for (int j = 0; j < v.size(); j++)
-    buckets[std::count(v[j].begin(), v[j].end(), '1')].push_back(v[j]);
+
+  for (auto key : v)
+    buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
 
   // to be parallelet
   for (int i = 0; i < 16; i++) {
@@ -193,18 +195,20 @@ void find_results(vector<string>& vec_primes, vector<string>& relative,
 int main() {
   readTrueTable("input.pla");
 
-  int count;
   vector<string> v;           // vector of strings that correponds to 1
   vector<string> vec_primes;  // primes in string format
   vector<string> result;      // vector<char*> result;
 
-  prepInput(v);
+  prepInput(v);  // parse inputs that respond to output is 1
+
   vector<string> relative(v);
 
   std::clock_t start = std::clock();
 
   // step 1
   find_primes(v, vec_primes);
+
+  // copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
 
   // step 2
   find_results(vec_primes, relative, result);

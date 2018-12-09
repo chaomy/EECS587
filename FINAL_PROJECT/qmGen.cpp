@@ -18,20 +18,16 @@ using std::vector;
 void writeTrueTable(string fname) {
   ofstream ofs(fname, std::iostream::out);
   string line;
-  const int num_bits = 8;
+  const int num_bits = 7;
   int total = 1 << num_bits;
 
   ofs << ".i " << num_bits << endl;
   ofs << ".o " << 1 << endl;
-
-  cout << " total " << total << endl;
   for (int i = 0; i < total; ++i) {
     ofs << std::bitset<num_bits>(i).to_string() << " "
         << (std::rand() % 3 == 0 ? 1 : 0) << endl;
   }
+  ofs << ".e" << endl;
 }
 
-int main(int argc, char** argv) {
-  static const int num_bits = atoi(argv[1]);
-  writeTrueTable("input.pla"); 
-}
+int main(int argc, char** argv) { writeTrueTable("input.pla"); }
