@@ -230,17 +230,25 @@ void readTrueTable(string fname) {
   }
 }
 
-inline int convertStr2NumBase3(string s) {
+template <const int Base>
+inline int convertStr2Num(string s) {
   int num{0}, base{1};
-  for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') * base;
+  for (int i = s.size() - 1; i >= 0; --i, base *= Base)
+    num += (s[i] - '0') * base;
   return num;
 }
 
-inline int convertStr2NumBase2(string s) {
-  int num{0}, base{1};
-  for (int i = s.size() - 1; i >= 0; --i, base *= 2) num += (s[i] - '0') * base;
-  return num;
-}
+// inline int convertStr2NumBase3(string s) {
+//   int num{0}, base{1};
+//   for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') *
+//   base; return num;
+// }
+
+// inline int convertStr2NumBase2(string s) {
+//   int num{0}, base{1};
+//   for (int i = s.size() - 1; i >= 0; --i, base *= 2) num += (s[i] - '0') *
+//   base; return num;
+// }
 
 inline string convertTo3baseStr(int num) {
   string res(in_bit_num, '0');
@@ -292,8 +300,8 @@ int main() {
 
   for (int i = 0; i < input.size(); ++i) {
     if (output[i][0] == '1' || output[i][0] == '2') {
-      int in_num_base3 = convertStr2NumBase3(input[i]);
-      int in_num_base2 = convertStr2NumBase2(input[i]);
+      int in_num_base3 = convertStr2Num<3>(input[i]);
+      int in_num_base2 = convertStr2Num<2>(input[i]);
       A[in_num_base3 * 3] = true;
       B[in_num_base2] = output[i][0] == '1';
     }
@@ -367,16 +375,15 @@ int main() {
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
+  // stop the timer
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+
   for (int num = 0; num < T; ++num) {
     if (C[num]) result.push_back(convertTo3baseStr(num));
   }
 
   sort(result.begin(), result.end());
-
-  // stop the timer
-  cudaEventRecord(stop);
-  cudaEventSynchronize(stop);
-
   for (auto tmp : result) cout << tmp << endl;
 
   float millisecond = 0;
