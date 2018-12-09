@@ -138,7 +138,8 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
     }
     if (first_meet >= 0) {
       C[first_meet] = true;
-      printf("first meet index is %d, base 3, I am thread %d\n", first_meet, idx);
+      printf("first meet index is %d, base 3, I am thread %d\n", first_meet,
+             idx);
     }
   }
 }
@@ -150,7 +151,7 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
       if (C[primes[i]] && comp(numBit, idx, primes[i])) {
-        if (idx == 7){
+        if (idx == 7) {
           printf("ma de I am %d, removed by %d\n", idx, primes[i]);
         }
         B[idx] = 0;
@@ -158,17 +159,14 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
     }
   }
 }
-__global__ void findResults(bool* A, bool* B, bool* C, int T, int numBit,
-                            int NumThread) {
+__global__ void findResults(bool* B, bool* C, int* primes, int prime_size, int numBit, int NumThread) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx == 7) printf("I am 7, am I good %d\n", B[idx]);
   if (idx < NumThread && B[idx]) {  // is a relative
-    for (int num = T - 1; num >= 0; --num) {
-      if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {  // is a prime
-        if (comp(numBit, idx, num)) {
-          C[num] = true;
-          break;
-        }
+    for (int i = prime_size - 1; i >= 0; --i) {
+      if (comp(numBit, idx, primes[i])) {
+        C[primes[i]] = true;
+        break;
       }
     }
   }
@@ -360,8 +358,8 @@ int main() {
                                      1 << in_bit_num);
 
   // CPU find prime
-  findResults<<<grid.x, block.x>>>(d_A, d_B, d_C, T, in_bit_num,
-                                   1 << in_bit_num);
+  findResults<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail, in_bit_num,
+                                     1 << in_bit_num);
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
