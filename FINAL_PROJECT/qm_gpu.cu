@@ -161,6 +161,7 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
 __global__ void findResults(bool* A, bool* B, bool* C, int T, int numBit,
                             int NumThread) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  if (idx == 7) printf("I am 7, am I good %d\n", B[idx]);
   if (idx < NumThread && B[idx]) {  // is a relative
     for (int num = T - 1; num >= idx; --num) {
       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {  // is a prime
