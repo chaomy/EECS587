@@ -333,21 +333,18 @@ int main() {
   for (int num = 0; num < T; ++num) {
     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
       primes[avail++] = num;
-      if (avail == prime_size_limit){
-        cout<<"wo kao !" <<endl; 
-      free(A);
-      free(B);
-      free(C);
-      cudaFree(d_A);
-      cudaFree(d_C);
-      cudaFree(d_B);
-      return 0;
-
+      if (avail == prime_size_limit - 5) {
+        cout << "wo kao !" << endl;
+        free(A);
+        free(B);
+        free(C);
+        cudaFree(d_A);
+        cudaFree(d_C);
+        cudaFree(d_B);
+        return 0;
       }
     }
   }
-
-
 
   // sort based on num of '2' in the prime
   std::sort(primes, primes + avail, comparePrime);
