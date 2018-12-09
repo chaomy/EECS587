@@ -79,8 +79,8 @@ struct {
 } comparePrime;
 
 // QM step 1
-void find_primes(vector<string>& v, vector<string>& vec_primes) {
-  vector<vector<string>> buckets(17);
+void find_primes(vector<string>& v, vector<string>& vec_primes, int bit_num) {
+  vector<vector<string>> buckets(bit_num+1);
 
   // store according to num of 1 bits
   unordered_set<string> prime;
@@ -89,16 +89,16 @@ void find_primes(vector<string>& v, vector<string>& vec_primes) {
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
 
   // to be parallelet
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < bit_num; i++) {
     auto it = std::find_if(buckets.begin(), buckets.end(),
                            [](const vector<string>& a) { return a.size(); });
     if (it == buckets.end()) break;
 
-    vector<vector<string>> next(17);
+    vector<vector<string>> next(bit_num+1);
     unordered_set<string> flag;
 
     // update bucket
-    for (int j = 0; j < 16; ++j) {
+    for (int j = 0; j < bit_num; ++j) {
       for (auto str_a : buckets[j]) {
         for (auto str_b : buckets[j + 1]) {
           int res = checkBITs(in_bit_num, str_a, str_b);
@@ -206,7 +206,7 @@ int main() {
   std::clock_t start = std::clock();
 
   // step 1
-  find_primes(v, vec_primes);
+  find_primes(v, vec_primes, in_bit_num);
 
   // copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
 
