@@ -150,6 +150,9 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
       if (C[primes[i]] && comp(numBit, idx, primes[i])) {
+        if (idx == 7){
+          printf("ma de I am %d, removed by %d\n", idx, primes[i]);
+        }
         B[idx] = 0;
       }
     }
