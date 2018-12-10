@@ -292,20 +292,20 @@ int main() {
   float time1{0}, time2{0};
   cudaEvent_t start, stop;
 
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
 
   // start the timer
-  // cudaEventRecord(start);
+  cudaEventRecord(start);
 
   for (int round = 0; round < in_bit_num; ++round) {
     update<<<grid.x, block.x>>>(d_A, T, in_bit_num, 1 << in_bit_num, round);
   }
 
   // stop the timer
-  // cudaEventRecord(stop);
-  // cudaEventSynchronize(stop);
-  // cudaEventElapsedTime(&time1, start, stop);
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&time1, start, stop);
 
   cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
 
