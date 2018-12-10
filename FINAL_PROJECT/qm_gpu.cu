@@ -289,7 +289,7 @@ int main() {
   dim3 block(BLOCK_X, 1);
   dim3 grid(((1 << in_bit_num) + BLOCK_X - 1) / BLOCK_X, 1);
 
-  double time1{0}, time2{0};
+  float time1{0}, time2{0};
   cudaEvent_t start, stop;
 
   cudaEventCreate(&start);
