@@ -353,7 +353,6 @@ int main() {
   }
 
   sort(result.begin(), result.end());
-  for (auto tmp : result) cout << tmp << endl;
 
   free(A);
   free(B);
