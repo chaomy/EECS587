@@ -237,7 +237,8 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
 }
 
 void runQM(int jobid) {
-  readtruetable("input.pla" + std::to_string(jobid));
+  readtruetable("input.pla");
+ // readtruetable("input.pla" + std::to_string(jobid));
 
   vector<string> v;           // vector of strings that correponds to 1
   vector<string> vec_primes;  // primes in string format
@@ -255,7 +256,8 @@ void runQM(int jobid) {
 }
 
 int main() {
-  for (int i = 4; i < 28; ++i) runQM(i);
+  //for (int i = 4; i < 28; ++i) runQM(i);
+  runQM(3);
   // sort(result.begin(), result.end());
   // for (auto item : result) cout << item << endl;
   return 0;
