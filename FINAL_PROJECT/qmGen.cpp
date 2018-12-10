@@ -4,9 +4,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <unordered_set>
 #include <vector>
-#include <string>
 using std::cout;
 using std::endl;
 using std::ifstream;
@@ -346,26 +346,26 @@ void writeTrueTable25(string fname) {
 }
 
 int main(int argc, char** argv) {
-		writeTrueTable4("input.pla4");
-		writeTrueTable5("input.pla5");
-		writeTrueTable6("input.pla6");
-		writeTrueTable7("input.pla7");
-		writeTrueTable8("input.pla8");
-		writeTrueTable9("input.pla9");
-		writeTrueTable10("input.pla10");
-		writeTrueTable11("input.pla11");
-		writeTrueTable12("input.pla12");
-		writeTrueTable13("input.pla13");
-		writeTrueTable14("input.pla14");
-		writeTrueTable15("input.pla15");
-		writeTrueTable16("input.pla16");
-		writeTrueTable17("input.pla17");
-		writeTrueTable18("input.pla18");
-		writeTrueTable19("input.pla19");
-		writeTrueTable20("input.pla20");
-		writeTrueTable21("input.pla21");
-		writeTrueTable22("input.pla22");
-		writeTrueTable23("input.pla23");
-		writeTrueTable24("input.pla24");
-		writeTrueTable25("input.pla25");
+  writeTrueTable10("input.pla10");
+  // writeTrueTable4("input.pla4");
+  // writeTrueTable5("input.pla5");
+  // writeTrueTable6("input.pla6");
+  // writeTrueTable7("input.pla7");
+  // writeTrueTable8("input.pla8");
+  // writeTrueTable9("input.pla9");
+  // writeTrueTable11("input.pla11");
+  // writeTrueTable12("input.pla12");
+  // writeTrueTable13("input.pla13");
+  // writeTrueTable14("input.pla14");
+  // writeTrueTable15("input.pla15");
+  // writeTrueTable16("input.pla16");
+  // writeTrueTable17("input.pla17");
+  // writeTrueTable18("input.pla18");
+  // writeTrueTable19("input.pla19");
+  // writeTrueTable20("input.pla20");
+  // writeTrueTable21("input.pla21");
+  // writeTrueTable22("input.pla22");
+  // writeTrueTable23("input.pla23");
+  // writeTrueTable24("input.pla24");
+  // writeTrueTable25("input.pla25");
 }
