@@ -17,7 +17,7 @@ using std::string;
 using std::unordered_set;
 using std::vector;
 
-// g++ qm_serial.cpp -std=c++11 -o qm_serial -O3 -g
+// g++ qm_serial.cpp -std=c++11 -o qm_serial -o3 -g
 
 int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
@@ -30,7 +30,7 @@ bool comp(int n, string a, string b) {
   return true;
 }
 
-int checkBITs(int n, string a, string b) {
+int checkbits(int n, string a, string b) {
   int count = 0, temp;
   for (int i = 0; i < n; ++i) {
     if (a[i] != b[i]) {
@@ -41,7 +41,7 @@ int checkBITs(int n, string a, string b) {
   return count == 1 ? temp : -1;
 }
 
-void readTrueTable(string fname) {
+void readtruetable(string fname) {
   ifstream s(fname, std::iostream::in);
   string line;
 
@@ -61,18 +61,18 @@ void readTrueTable(string fname) {
   }
 }
 
-void prepInput(vector<string>& v) {
-  size_t N{input.size()};
-  v.reserve(N);
+void prepinput(vector<string>& v) {
+  size_t n{input.size()};
+  v.reserve(n);
 
-  for (int i = 0; i < N; ++i) {
+  for (int i = 0; i < n; ++i) {
     if (output[i][0] == '1' || output[i][0] == '2') {
       v.push_back(input[i]);
     }
   }
 }
 
-bool notEmpty(const string& a) { return a.size(); }
+bool notempty(const string& a) { return a.size(); }
 
 struct {
   bool operator()(string a, string b) {
@@ -80,9 +80,9 @@ struct {
     size_t score_b = std::count(b.begin(), b.end(), '2');
     return score_a == score_b ? false : score_a < score_b;
   }
-} comparePrime;
+} compareprime;
 
-// QM step 1
+// qm step 1
 void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
                         int bit_num) {
   vector<vector<string>> buckets(bit_num + 1);
@@ -108,7 +108,7 @@ void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
     for (int j = 0; j < bit_num; ++j) {
       for (auto str_a : buckets[j]) {
         for (auto str_b : buckets[j + 1]) {
-          int res = checkBITs(in_bit_num, str_a, str_b);
+          int res = checkbits(in_bit_num, str_a, str_b);
           if (res != -1) {  // can merge
             vec_flags[j].insert(str_a);
             vec_flags[j + 1].insert(str_b);
@@ -125,9 +125,9 @@ void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
   }
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
 
-  cout << "Phase 1 " << (std::clock() - start) / (double)CLOCKS_PER_SEC << " "
+  cout << "phase 1 " << (std::clock() - start) / (double)clocks_per_sec << " "
        << vec_primes.size() << endl;
-  std::sort(vec_primes.begin(), vec_primes.end(), comparePrime);
+  std::sort(vec_primes.begin(), vec_primes.end(), compareprime);
 }
 
 // solve set cover problem by finding one solution
@@ -157,7 +157,7 @@ void solve_set_cover_one_solution(vector<string>& relative,
   }
 }
 
-// QM step 2
+// qm step 2
 void find_results_org(vector<string>& vec_primes, vector<string>& relative,
                       vector<string>& result) {
   std::clock_t start = std::clock();
@@ -187,7 +187,7 @@ void find_results_org(vector<string>& vec_primes, vector<string>& relative,
   }
 
   // solve_set_cover_one_solution(relative, vec_primes, result);
-  cout << "Phase 2 " << (std::clock() - start) / (double)CLOCKS_PER_SEC << endl;
+  cout << "phase 2 " << (std::clock() - start) / (double)clocks_per_sec << endl;
 }
 
 void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
@@ -229,21 +229,21 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
     }
   }
 
-  auto last = std::partition(result.begin(), result.end(), notEmpty);
+  auto last = std::partition(result.begin(), result.end(), notempty);
   result.erase(last, result.end());
 
-  cout << "Phase 2 " << (std::clock() - start) / (double)CLOCKS_PER_SEC << " "
+  cout << "phase 2 " << (std::clock() - start) / (double)clocks_per_sec << " "
        << result.size() << endl;
 }
 
-int main() {
-  readTrueTable("input.pla");
+void runQM(int jobid) {
+  readtruetable("input.pla" + to_string(jobid));
 
   vector<string> v;           // vector of strings that correponds to 1
   vector<string> vec_primes;  // primes in string format
   vector<string> result;      // vector<char*> result;
 
-  prepInput(v);  // parse inputs that respond to output is 1
+  prepinput(v);  // parse inputs that respond to output is 1
 
   vector<string> relative(v);
 
@@ -252,22 +252,25 @@ int main() {
 
   // step 2
   find_results_serial(vec_primes, relative, result);
+}
 
+int main() {
+  for (int i = 4; i < 28; ++i) runQM(i);
   // sort(result.begin(), result.end());
   // for (auto item : result) cout << item << endl;
   return 0;
 }
 
 /*
-1) Let I represents set of elements included so far.  Initialize I = {}
+1) let i represents set of elements included so far.  initialize i = {}
 
-2) Do following while I is not same as U.
-    a) Find the set Si in {S1, S2, ... Sm} whose cost effectiveness is
-       smallest, i.e., the ratio of cost C(Si) and number of newly added
+2) do following while i is not same as u.
+    a) find the set si in {s1, s2, ... sm} whose cost effectiveness is
+       smallest, i.e., the ratio of cost c(si) and number of newly added
        elements is minimum.
-       Basically we pick the set for which following value is minimum.
-       Cost(Si) / |Si - I|
-    b) Add elements of above picked Si to I, i.e.,  I = I U Si
+       basically we pick the set for which following value is minimum.
+       cost(si) / |si - i|
+    b) add elements of above picked si to i, i.e.,  i = i u si
 */
 
 void solve_set_cover_approx_greedy(vector<string>& relative,
