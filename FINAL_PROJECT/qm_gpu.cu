@@ -289,7 +289,9 @@ int main() {
   dim3 block(BLOCK_X, 1);
   dim3 grid(((1 << in_bit_num) + BLOCK_X - 1) / BLOCK_X, 1);
 
+  double time1{0}, time2{0};
   cudaEvent_t start, stop;
+
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
 
@@ -303,10 +305,7 @@ int main() {
   // stop the timer
   cudaEventRecord(stop);
   cudaEventSynchronize(stop);
-
-  float millisecond = 0;
-  cudaEventElapsedTime(&millisecond, start, stop);
-  cout << "time: " << millisecond << " ms" << endl;
+  cudaEventElapsedTime(&time1, start, stop);
 
   cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
 
@@ -334,6 +333,12 @@ int main() {
   cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
   cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
 
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+
+  // start the timer
+  cudaEventRecord(start);
+
   // first find essential prime implicate first,
   findEssentialPrimes<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail,
                                            in_bit_num, 1 << in_bit_num);
@@ -345,6 +350,13 @@ int main() {
   // CPU find prime
   findResults<<<grid.x, block.x>>>(d_B, d_C, d_primes, avail, in_bit_num,
                                    1 << in_bit_num);
+
+  // stop the timer
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&time2, start, stop);
+
+  cout << in_bit_num << " " << time1 << " " << time2 << endl;
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
