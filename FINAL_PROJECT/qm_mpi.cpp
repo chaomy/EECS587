@@ -374,7 +374,7 @@ int main() {
   return 0;
 }
 
-/*
+/* hahahahahahha
 1) let i represents set of elements included so far.  initialize i = {}
 
 2) do following while i is not same as u.
