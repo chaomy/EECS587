@@ -216,6 +216,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
 
   // store according to num of 1 bits
   unordered_set<string> prime;
+  vector<string> old_begin_buckets;
   bool totaldone{false};
 
   for (int i = 0; i < in_bit_num; ++i) {
@@ -244,6 +245,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
         if (j != start_id && vec_flags[j].find(str_a) == vec_flags[j].end())
           prime.insert(str_a);
       }  // loop over all items on buket layer i
+      if (j == start_id) old_begin_buckets = std::move(buckets[j]);
       buckets[j] = std::move(next[j]);
     }  // loop over all layers
 
@@ -267,7 +269,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     }
 
     // insert start into prime
-    for (auto str_a : buckets[start_id]) {
+    for (auto str_a : old_begin_buckets) {
       if (vec_flags[start_id].find(str_a) == vec_flags[start_id].end() &&
           vec_buffs[start_id].find(str_a) == vec_buffs[start_id].end()) {
         // if (id == 2) {
@@ -279,15 +281,8 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   }
 
   vector<int> vec_primes_local, vec_primes_all;
-
   std::transform(prime.begin(), prime.end(),
                  std::back_inserter(vec_primes_local), convertStrToNum<3>);
-
-  // if (id == 2) {
-  //   cout << "I am " << id << " start " << start_id << " end " << end_id <<
-  //   endl; copy(prime.begin(), prime.end(),
-  //   std::ostream_iterator<string>(cout, "\n"));
-  // }
 
   int local_prime_size = vec_primes_local.size();
   int total_prime_size{0}, send_prime_size{0};
@@ -325,9 +320,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
                      std::back_inserter(vec_primes), convertNumToStr<3>);
     }
     sort(vec_primes.begin(), vec_primes.end(), compareprime());
-    // set<string, compareprime>
-    // mdict(std::make_move_iterator(vec_primes.begin()),
-    //                                 std::make_move_iterator(vec_primes.end()));
     cout << vec_primes.size() << endl;
   }
 
@@ -371,7 +363,7 @@ int main() {
   return 0;
 }
 
-/* hahahahahahha
+/*
 1) let i represents set of elements included so far.  initialize i = {}
 
 2) do following while i is not same as u.
