@@ -33,6 +33,7 @@ using std::vector;
 namespace mpi = boost::mpi;
 
 // mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi -lboost_serialization -lmpi  -o qm_mpi  -O3 -g
+// mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi-mt -lboost_serialization-mt  -o qm_mpi  -O3 -g -L${BOOST_LIB} -I${BOOST_INCLUDE}
 
 bool comp(int n, const string& a, const string& b) {
   for (int i = 0; i < n; i++) {
