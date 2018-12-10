@@ -405,7 +405,7 @@ void runQMmpi(int jobid) {
 
   if (cmm.rank() == ROOT) {
     cout << std::setprecision(8) << std::setw(10);
-    cout << in_bit_num << " " << time1 << " " << time2 << endl;
+    cout << cmm.size() << " " << in_bit_num << " " << time1 << " " << time2 << endl;
   }
 }
 
