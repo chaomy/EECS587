@@ -9,6 +9,7 @@
 #include <iterator>
 #include <unordered_set>
 #include <vector>
+#include <iomanip> 
 
 using std::cout;
 using std::endl;
@@ -251,7 +252,7 @@ void runQM(int jobid) {
   // step 2
   find_results_serial(vec_primes, relative, result);
 
-  cout << in_bit_num << " " << time1 << " " << time2 << endl;
+  cout << in_bit_num << " " << std::setprecision(5) << time1 << " " << time2 << endl;
 }
 
 int main(int argc, char* argv[]) {
