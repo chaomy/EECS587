@@ -6,8 +6,11 @@
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi/datatype_fwd.hpp>
 #include <boost/mpi/environment.hpp>
+#include <boost/mpi/group.hpp>
 #include <boost/mpi/operations.hpp>
 #include <boost/mpi/timer.hpp>
+#include <boost/optional.hpp>
+#include <boost/range/irange.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/unordered_map.hpp>
@@ -17,6 +20,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <set>
@@ -37,6 +41,8 @@ namespace mpi = boost::mpi;
 // mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi -lboost_serialization -lmpi  -o
 // qm_mpi  -O3 -g mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi-mt
 // -lboost_serialization-mt  -o qm_mpi  -O3 -g -L${BOOST_LIB} -I${BOOST_INCLUDE}
+
+double time1{0}, time2{0};
 
 bool comp(int n, const string& a, const string& b) {
   for (int i = 0; i < n; i++) {
@@ -123,7 +129,7 @@ bool notEmpty(const string& a) { return a.size(); }
 
 void find_results(mpi::communicator& cmm, vector<string>& vec_primes,
                   vector<string>& relative, vector<string>& result,
-                  int in_bit_num) {
+                  int in_bit_num, vector<int>& assignments) {
   int worker_num = cmm.size(), id = cmm.rank();
   int workload = relative.size();
   int remains = workload % worker_num;
@@ -184,25 +190,20 @@ void find_results(mpi::communicator& cmm, vector<string>& vec_primes,
          ROOT);
 
   if (id == ROOT) {
-    cout << myclock.elapsed() << " ";
+    time1 = myclock.elapsed();
     auto last = std::partition(result.begin(), result.end(), notEmpty);
     result.erase(last, result.end());
-    cout << result.size() << endl;
   }
 }
 
 void find_primes(mpi::communicator& cmm, vector<string>& v,
-                 vector<string>& vec_primes, int in_bit_num) {
-  int worker_num = cmm.size(), id = cmm.rank();
-  int firstworker{0}, lastworker{worker_num - 1};
-
+                 vector<string>& vec_primes, int in_bit_num,
+                 vector<int>& assignments) {
   int bucketsize = in_bit_num + 1;
-  int workload = bucketsize - 1;
-
-  int remains = workload % worker_num;
-  int local_len = workload / worker_num + (id < remains);
-  int start_id = local_len * id + (id < remains ? 0 : remains);
-  int end_id = start_id + local_len - 1;
+  int worker_num = assignments.size(), id = cmm.rank();
+  int firstworker{0}, lastworker{worker_num - 1};
+  int start_id = assignments[id];
+  int end_id = id == lastworker ? in_bit_num : assignments[id + 1] - 1;
 
   vector<vector<string>> buckets(bucketsize), next(bucketsize);
   vector<unordered_set<string>> vec_flags(bucketsize);
@@ -211,13 +212,13 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   for (auto key : v)
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
 
-  // record time for finding primes
-  mpi::timer myclock;
-
   // store according to num of 1 bits
   unordered_set<string> prime;
   vector<string> old_begin_buckets;
   bool totaldone{false};
+
+  // record time for finding primes
+  mpi::timer myclock;
 
   for (int i = 0; i < in_bit_num; ++i) {
     bool localdone{false};
@@ -281,12 +282,10 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   int local_prime_size = vec_primes_local.size();
   int total_prime_size{0}, send_prime_size{0};
 
-  // cout << "I am " << id << " start " << start_id << " end " << end_id << "
-  // len "
-  //      << local_len << " bucketsize " << bucketsize << " remains is " <<
-  //      remains
-  //      << " vec_primes " << vec_primes_local.size() << " send size "
-  //      << send_prime_size << endl;
+  // cout << "I am " << id << " start " << start_id << " end " << end_id
+  //      << " bucketsize " << bucketsize << " vec_primes "
+  //      << vec_primes_local.size() << " send size " << send_prime_size <<
+  //      endl;
 
   all_reduce(cmm, local_prime_size, send_prime_size, mpi::maximum<int>());
 
@@ -297,9 +296,10 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
 
   gather(cmm, vec_primes_local.data(), send_prime_size, vec_primes_all.data(),
          ROOT);
-  gather(cmm, local_prime_size, each_prime_sizes, ROOT);
 
-  if (cmm.rank() == ROOT) cout << myclock.elapsed() << " ";
+  if (cmm.rank() == ROOT) time2 = myclock.elapsed();
+
+  gather(cmm, local_prime_size, each_prime_sizes, ROOT);
 
   if (id == ROOT) {
     // convert gathered primes<int> to the vec_prime<string>
@@ -314,18 +314,61 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
                      std::back_inserter(vec_primes), convertNumToStr<3>);
     }
     sort(vec_primes.begin(), vec_primes.end(), compareprime());
-    cout << vec_primes.size() << endl;
   }
-
-  // pass vec_primes to everyone
-  broadcast(cmm, vec_primes, ROOT);
-
-  // if (cmm.rank() == 2)
-  // copy(vec_primes.begin(), vec_primes.end(),
-  //      std::ostream_iterator<string>(cout, "\n"));
 }
 
-int main() {
+uint64_t findMinMaxCutting(vector<uint64_t>& nums, int K) {
+  int N{(int)nums.size()};
+
+  // dp[i][j]  => prefix [0, i] is cut by j times
+  vector<vector<uint64_t>> dp(
+      N, vector<uint64_t>(K, std::numeric_limits<uint64_t>::max()));
+
+  // cut 0 times, (no cut)
+  uint64_t total = 0;
+  for (int i = 0; i < N; ++i) dp[i][0] = (total += nums[i]);
+
+  for (int i = 1; i < N; ++i) {
+    int min_cut = std::min(i, K - 1);
+    for (int j = 1; j <= min_cut; ++j) {
+      uint64_t sum = 0;
+      for (int k = i; k > j - 1; --k) {
+        if ((sum += nums[k]) > dp[i][j]) break;
+        dp[i][j] = std::min(dp[i][j], std::max(dp[k - 1][j - 1], sum));
+      }
+    }
+  }
+  return dp[N - 1][K - 1];
+}
+
+vector<int> calculateAssignMent(int bit_num, int worker_num) {
+  int bucket_size = bit_num + 1;
+  vector<uint64_t> slots(bucket_size);
+
+  slots[0] = 1;
+  for (int i = 1; i < bucket_size; ++i)
+    slots[i] = slots[i - 1] * (bit_num + 1 - i) / i;
+
+  for (int i = 0; i < bucket_size - 1; ++i) slots[i] *= slots[i + 1];
+
+  vector<int> res({0});
+  uint64_t max_load = findMinMaxCutting(slots, worker_num);
+  uint64_t sum{0};
+
+  int remain_workers{worker_num - 1};
+  for (int i = 1; i < bucket_size; sum += slots[i], ++i) {
+    if (sum + slots[i] > max_load || remain_workers >= bucket_size - i) {
+      sum = 0, remain_workers--;
+      res.push_back(i);
+    }
+  }
+
+  // cout << " bucket size = " << bucket_size << "max load  " << max_load <<
+  // endl;
+  return res;
+}
+
+void runQMmpi(int jobid) {
   mpi::environment env;
   mpi::communicator cmm;
 
@@ -335,7 +378,8 @@ int main() {
   vector<string> v;  // vector of strings that correponds to 1
 
   if (cmm.rank() == ROOT) {
-    in_bit_num = readtruetable("input.pla", input, output);
+    in_bit_num =
+        readtruetable("input.pla" + std::to_string(jobid), input, output);
     prepinput(v, input, output);  // parse inputs that respond to output is 1
   }
 
@@ -346,14 +390,27 @@ int main() {
   vector<string> vec_primes;  // primes in string format
   vector<string> result;      // vector<char*> result;
 
+  vector<int> assignments =
+      std::move(calculateAssignMent(in_bit_num, cmm.size()));
+
+  // mpi::communicator subcmm = cmm.split(cmm.rank() < assignments.size());
+
   // step 1
-  find_primes(cmm, v, vec_primes, in_bit_num);
+  find_primes(cmm, v, vec_primes, in_bit_num, assignments);
+
+  broadcast(cmm, vec_primes, ROOT);
 
   // step 2
-  find_results(cmm, vec_primes, relative, result, in_bit_num);
+  find_results(cmm, vec_primes, relative, result, in_bit_num, assignments);
 
-  // sort(result.begin(), result.end());
-  // for (auto item : result) cout << item << endl;
+  if (cmm.rank() == ROOT) {
+    cout << std::setprecision(8) << std::setw(10);
+    cout << in_bit_num << " " << time1 << " " << time2 << endl;
+  }
+}
+
+int main(int argc, char** argv) {
+  runQMmpi(atoi(argv[1]));
   return 0;
 }
 
