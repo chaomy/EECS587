@@ -368,8 +368,4 @@ int main(int argc, char** argv) {
 		writeTrueTable23("input.pla23");
 		writeTrueTable24("input.pla24");
 		writeTrueTable25("input.pla25");
-		writeTrueTable4("input.pla4");
-		writeTrueTable4("input.pla4");
-		writeTrueTable4("input.pla4");
-		writeTrueTable4("input.pla4");
 }
