@@ -19,6 +19,7 @@ using std::vector;
 
 // g++ qm_serial.cpp -std=c++11 -o qm_serial -o3 -g
 
+double time1, time2;
 int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
 vector<string> input, output;
@@ -125,8 +126,7 @@ void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
   }
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
 
-  cout << "phase 1 " << (std::clock() - start) / double(CLOCKS_PER_SEC) << " "
-       << vec_primes.size() << endl;
+  time1 = (std::clock() - start) / double(CLOCKS_PER_SEC);
   std::sort(vec_primes.begin(), vec_primes.end(), compareprime);
 }
 
@@ -187,7 +187,7 @@ void find_results_org(vector<string>& vec_primes, vector<string>& relative,
   }
 
   // solve_set_cover_one_solution(relative, vec_primes, result);
-  cout << "phase 2 " << (std::clock() - start) / double(CLOCKS_PER_SEC) << endl;
+  time2 = (std::clock() - start) / double(CLOCKS_PER_SEC);
 }
 
 void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
