@@ -125,7 +125,7 @@ void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
   }
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
 
-  cout << "phase 1 " << (std::clock() - start) / (double)clocks_per_sec << " "
+  cout << "phase 1 " << (std::clock() - start) / double(CLOCKS_PER_SEC) << " "
        << vec_primes.size() << endl;
   std::sort(vec_primes.begin(), vec_primes.end(), compareprime);
 }
@@ -187,7 +187,7 @@ void find_results_org(vector<string>& vec_primes, vector<string>& relative,
   }
 
   // solve_set_cover_one_solution(relative, vec_primes, result);
-  cout << "phase 2 " << (std::clock() - start) / (double)clocks_per_sec << endl;
+  cout << "phase 2 " << (std::clock() - start) / double(CLOCKS_PER_SEC) << endl;
 }
 
 void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
@@ -232,12 +232,12 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
   auto last = std::partition(result.begin(), result.end(), notempty);
   result.erase(last, result.end());
 
-  cout << "phase 2 " << (std::clock() - start) / (double)clocks_per_sec << " "
+  cout << "phase 2 " << (std::clock() - start) / double(CLOCKS_PER_SEC) << " "
        << result.size() << endl;
 }
 
 void runQM(int jobid) {
-  readtruetable("input.pla" + to_string(jobid));
+  readtruetable("input.pla" + std::to_string(jobid));
 
   vector<string> v;           // vector of strings that correponds to 1
   vector<string> vec_primes;  // primes in string format

@@ -19,12 +19,14 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <set>
 #include <unordered_set>
 #include <vector>
 
 using std::cout;
 using std::endl;
 using std::ifstream;
+using std::set;
 using std::string;
 using std::unordered_set;
 using std::vector;
@@ -86,13 +88,13 @@ void prepinput(vector<string>& v, vector<string>& input,
   }
 }
 
-struct {
+struct compareprime {
   bool operator()(const string& a, const string& b) {
     size_t score_a = std::count(a.begin(), a.end(), '2');
     size_t score_b = std::count(b.begin(), b.end(), '2');
-    return score_a == score_b ? false : score_a < score_b;
+    return score_a == score_b ? a < b : score_a < score_b;
   }
-} compareprime;
+};
 
 template <const int Base>
 int convertStrToNum(const string& input) {
@@ -226,51 +228,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     all_reduce(cmm, localdone, totaldone, std::logical_and<bool>());
     if (totaldone) break;
 
-    // update buckets
-    // for (int j = end_id; j >= start_id; --j) {
-    //   // before do the start_id must recieve from its neigh
-    //   // cout << "I am " << cmm.rank() << ", j = " << j << endl;
-    //   if (j == start_id && id != firstworker) {
-    //     cmm.recv(id - 1, 0, vec_buffs[start_id]);
-    //   }
-
-    //   for (auto str_b : buckets[j + 1]) {
-    //     for (auto str_a : buckets[j]) {
-    //       int res = checkbits(in_bit_num, str_a, str_b);
-    //       if (res != -1) {
-    //         vec_flags[j].insert(str_a);
-    //         vec_flags[j + 1].insert(str_b);
-    //         str_a[res] = '2';
-    //         next[j].push_back(str_a);
-    //         str_a[res] = '0';
-    //       }
-    //     }  // loop over level j
-
-    //     // add prime
-    //     if (j != end_id &&
-    //         vec_flags[j + 1].find(str_b) == vec_flags[j + 1].end()) {
-    //       prime.insert(str_b);
-    //       cout << "I am " << cmm.rank() << ", insert " << str_b << endl;
-    //     }
-    //   }  // loop over level j + 1
-
-    //   if (j == start_id) {
-    //     for (auto str_a : buckets[j]) {
-    //       if (vec_flags[j].find(str_a) == vec_flags[j].end() &&
-    //           vec_buffs[j].find(str_a) == vec_buffs[j].end()) {
-    //         cout << "I am " << cmm.rank() << ", insert " << str_a << endl;
-    //         prime.insert(str_a);
-    //       }
-    //     }
-    //   }
-
-    //   // send when finished end_id
-    //   if (j == end_id && id != lastworker) {
-    //     vec_buffs[end_id + 1] = vec_flags[end_id + 1];
-    //     cmm.isend(id + 1, 0, vec_buffs[end_id + 1]);
-    //   }
-    // }  // loop over level
-
     // update bucket
     for (int j = start_id; j <= end_id; ++j) {
       for (auto str_a : buckets[j]) {
@@ -287,7 +244,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
         if (j != start_id && vec_flags[j].find(str_a) == vec_flags[j].end())
           prime.insert(str_a);
       }  // loop over all items on buket layer i
-      vec_flags[j].clear();
       buckets[j] = std::move(next[j]);
     }  // loop over all layers
 
@@ -300,24 +256,38 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     }
 
     if (id != lastworker) {
-      vec_buffs[end_id + 1] = vec_flags[end_id + 1];
+      vec_buffs[end_id + 1] = std::move(vec_flags[end_id + 1]);
       cmm.send(id + 1, 0, vec_buffs[end_id + 1]);
     }
 
-    // insert start
+    if (id == 2) {
+      cout << " i = " << i << endl;
+      copy(vec_buffs[start_id].begin(), vec_buffs[start_id].end(),
+           std::ostream_iterator<string>(cout, "\n"));
+    }
+
+    // insert start into prime
     for (auto str_a : buckets[start_id]) {
       if (vec_flags[start_id].find(str_a) == vec_flags[start_id].end() &&
-          vec_buffs[start_id].find(str_a) == vec_buffs[start_id].end())
+          vec_buffs[start_id].find(str_a) == vec_buffs[start_id].end()) {
+        // if (id == 2) {
+        // cout << "I am " << id << " I am taking " << str_a << endl;
+        // }
         prime.insert(str_a);
+      }
     }
   }
 
-  vector<string> vec_primes_local;
+  vector<int> vec_primes_local, vec_primes_all;
 
-  std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes_local));
+  std::transform(prime.begin(), prime.end(),
+                 std::back_inserter(vec_primes_local), convertStrToNum<3>);
 
-  // std::transform(prime.begin(), prime.end(),
-  //                std::back_inserter(vec_primes_local), convertStrToNum<3>);
+  // if (id == 2) {
+  //   cout << "I am " << id << " start " << start_id << " end " << end_id <<
+  //   endl; copy(prime.begin(), prime.end(),
+  //   std::ostream_iterator<string>(cout, "\n"));
+  // }
 
   int local_prime_size = vec_primes_local.size();
   int total_prime_size{0}, send_prime_size{0};
@@ -333,9 +303,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
 
   vec_primes_local.resize(send_prime_size);
 
-  vector<string> each_prime_sizes(worker_num);
-  vector<int> vec_primes_all;
-
+  vector<int> each_prime_sizes(worker_num);
   vec_primes_all.reserve(send_prime_size * worker_num);
 
   gather(cmm, vec_primes_local.data(), send_prime_size, vec_primes_all.data(),
@@ -349,14 +317,17 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     for (int i = 0; i < worker_num; ++i) {
       int start = i * send_prime_size;
       int end = i * send_prime_size + each_prime_sizes[i];
-      vector<int> size_param(send_prime_size, in_bit_num);
 
+      vector<int> size_param(send_prime_size, in_bit_num);
       // assign vec_primes
       std::transform(vec_primes_all.begin() + start,
                      vec_primes_all.begin() + end, size_param.begin(),
                      std::back_inserter(vec_primes), convertNumToStr<3>);
-      std::sort(vec_primes.begin(), vec_primes.end(), compareprime);
     }
+    sort(vec_primes.begin(), vec_primes.end(), compareprime());
+    // set<string, compareprime>
+    // mdict(std::make_move_iterator(vec_primes.begin()),
+    //                                 std::make_move_iterator(vec_primes.end()));
     cout << vec_primes.size() << endl;
   }
 
@@ -415,3 +386,48 @@ int main() {
 void solve_set_cover_approx_greedy(vector<string>& relative,
                                    vector<string>& vec_primes,
                                    vector<string>& result) {}
+
+// update buckets
+// for (int j = end_id; j >= start_id; --j) {
+//   // before do the start_id must recieve from its neigh
+//   // cout << "I am " << cmm.rank() << ", j = " << j << endl;
+//   if (j == start_id && id != firstworker) {
+//     cmm.recv(id - 1, 0, vec_buffs[start_id]);
+//   }
+
+//   for (auto str_b : buckets[j + 1]) {
+//     for (auto str_a : buckets[j]) {
+//       int res = checkbits(in_bit_num, str_a, str_b);
+//       if (res != -1) {
+//         vec_flags[j].insert(str_a);
+//         vec_flags[j + 1].insert(str_b);
+//         str_a[res] = '2';
+//         next[j].push_back(str_a);
+//         str_a[res] = '0';
+//       }
+//     }  // loop over level j
+
+//     // add prime
+//     if (j != end_id &&
+//         vec_flags[j + 1].find(str_b) == vec_flags[j + 1].end()) {
+//       prime.insert(str_b);
+//       cout << "I am " << cmm.rank() << ", insert " << str_b << endl;
+//     }
+//   }  // loop over level j + 1
+
+//   if (j == start_id) {
+//     for (auto str_a : buckets[j]) {
+//       if (vec_flags[j].find(str_a) == vec_flags[j].end() &&
+//           vec_buffs[j].find(str_a) == vec_buffs[j].end()) {
+//         cout << "I am " << cmm.rank() << ", insert " << str_a << endl;
+//         prime.insert(str_a);
+//       }
+//     }
+//   }
+
+//   // send when finished end_id
+//   if (j == end_id && id != lastworker) {
+//     vec_buffs[end_id + 1] = vec_flags[end_id + 1];
+//     cmm.isend(id + 1, 0, vec_buffs[end_id + 1]);
+//   }
+// }  // loop over level
