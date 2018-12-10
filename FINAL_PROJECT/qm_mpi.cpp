@@ -228,10 +228,12 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     // update buckets
     for (int j = end_id; j >= start_id; --j) {
       // before do the start_id must recieve from its neigh
-      if (j == start_id && id != firstworker) {
+    
+	cout<<"I am "<<cmm.rank()<<", j = "<<j<<endl;
+	if (j == start_id && id != firstworker) {
         cmm.recv(id - 1, 0, vec_buffs[start_id]);
       }
-
+	
       for (auto str_b : buckets[j + 1]) {
         for (auto str_a : buckets[j]) {
           int res = checkbits(in_bit_num, str_a, str_b);
@@ -248,6 +250,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
         if (j != end_id &&
             vec_flags[j + 1].find(str_b) == vec_flags[j + 1].end())
           prime.insert(str_b);
+		  cout<<"I am "<<cmm.rank()<<", insert "<<str_b<<endl;
       }  // loop over level j + 1
 
       if (j == start_id) {
@@ -264,7 +267,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
         cmm.isend(id + 1, 0, vec_buffs[end_id + 1]);
       }
     }  // loop over level
-
     // update bucket
     // for (int j = start_id; j <= end_id; ++j) {
     //   for (auto str_a : buckets[j]) {
