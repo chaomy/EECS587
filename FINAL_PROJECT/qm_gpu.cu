@@ -300,6 +300,14 @@ int main() {
     update<<<grid.x, block.x>>>(d_A, T, in_bit_num, 1 << in_bit_num, round);
   }
 
+  // stop the timer
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+
+  float millisecond = 0;
+  cudaEventElapsedTime(&millisecond, start, stop);
+  cout << "time: " << millisecond << " ms" << endl;
+
   cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
 
   int avail = 0;
@@ -340,20 +348,12 @@ int main() {
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
-  // stop the timer
-  cudaEventRecord(stop);
-  cudaEventSynchronize(stop);
-
   for (int num = 0; num < T; ++num) {
     if (C[num]) result.push_back(convertTo3baseStr(num));
   }
 
   sort(result.begin(), result.end());
   for (auto tmp : result) cout << tmp << endl;
-
-  float millisecond = 0;
-  cudaEventElapsedTime(&millisecond, start, stop);
-  cout << "time: " << millisecond << " ms" << endl;
 
   free(A);
   free(B);
