@@ -18,7 +18,7 @@ using std::vector;
 void writeTrueTable(string fname) {
   ofstream ofs(fname, std::iostream::out);
   string line;
-  const int num_bits = 7;
+  const int num_bits = 14;
   int total = 1 << num_bits;
 
   ofs << ".i " << num_bits << endl;

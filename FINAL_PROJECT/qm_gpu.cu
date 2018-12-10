@@ -22,21 +22,21 @@ using std::vector;
                 ...
         }
 */
-struct Lock {
-  int* mutex;
-  Lock() {
-    int state = 0;
-    cudaMalloc((void**)&mutex, sizeof(int));
-    cudaMemcpy(mutex, &state, sizeof(int), cudaMemcpyHostToDevice);
-  }
-  ~Lock() { cudaFree(mutex); }
+// struct Lock {
+//   int* mutex;
+//   Lock() {
+//     int state = 0;
+//     cudaMalloc((void**)&mutex, sizeof(int));
+//     cudaMemcpy(mutex, &state, sizeof(int), cudaMemcpyHostToDevice);
+//   }
+//   ~Lock() { cudaFree(mutex); }
 
-  __device__ void lock() {
-    while (atomicCAS(mutex, 0, 1) != 0)
-      ;
-  }
-  __device__ void unlock() { atomicExch(mutex, 0); }
-};
+//   __device__ void lock() {
+//     while (atomicCAS(mutex, 0, 1) != 0)
+//       ;
+//   }
+//   __device__ void unlock() { atomicExch(mutex, 0); }
+// };
 
 inline void split(const string& s, const char* delim, vector<string>& v) {
   // duplicate original string, return a char pointer and free  memories
@@ -63,7 +63,7 @@ vector<string> input, output;
 __global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread) {
-    for (int num = idx; num < T; num = num + NumThread) {
+    for (int num = idx; num < T; num += NumThread) {
       if (A[3 * num] == 0) continue;
       int cnt_2 = 0;
       // convert 2 base to 3 base, count 2
@@ -166,39 +166,6 @@ __global__ void findResults(bool* B, bool* C, int* primes, int prime_size,
   }
 }
 
-// __global__ void takePrime(bool* A, int T, int NumThread, int* size, int*
-// primes,
-//                           Lock mylock) {
-//   int idx = threadIdx.x + blockIdx.x * blockDim.x;
-//   if (idx < NumThread) {
-//     for (int num = idx; num < T; num = num + NumThread) {
-//       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
-//         mylock.lock();
-//         primes[(*size)++] = num;
-//         mylock.unlock();
-//       }
-//     }
-//   }
-// }
-
-// bool comp(int n, string a, string b) {
-//   for (int i = 0; i < n; i++) {
-//     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
-//   }
-//   return true;
-// }
-
-int checkBITs(int n, string a, string b) {
-  int count = 0, temp;
-  for (int i = 0; i < n; ++i) {
-    if (a[i] != b[i]) {
-      if (++count > 1) return -1;
-      temp = i;
-    }
-  }
-  return count == 1 ? temp : -1;
-}
-
 void prepInput(vector<string>& v) {
   size_t N{input.size()};
   v.reserve(N);
@@ -221,26 +188,32 @@ void readTrueTable(string fname) {
   getline(s, line);
   out_bit_num = stoi(line);
 
-  // read head
-  while (getline(s, line) && (line != ".e")) {
-    vector<string> buff;
-    split(line, " ", buff);
-    input.push_back(buff[0]);
-    output.push_back(buff[1]);
+  string buff1, buff2;
+  while (getline(s, buff1, ' ') && getline(s, buff2)) {
+    input.push_back(buff1);
+    output.push_back(buff2);
   }
 }
 
-inline int convertStr2NumBase3(string s) {
+template <const int Base>
+inline int convertStr2Num(string s) {
   int num{0}, base{1};
-  for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') * base;
+  for (int i = s.size() - 1; i >= 0; --i, base *= Base)
+    num += (s[i] - '0') * base;
   return num;
 }
 
-inline int convertStr2NumBase2(string s) {
-  int num{0}, base{1};
-  for (int i = s.size() - 1; i >= 0; --i, base *= 2) num += (s[i] - '0') * base;
-  return num;
-}
+// inline int convertStr2NumBase3(string s) {
+//   int num{0}, base{1};
+//   for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') *
+//   base; return num;
+// }
+
+// inline int convertStr2NumBase2(string s) {
+//   int num{0}, base{1};
+//   for (int i = s.size() - 1; i >= 0; --i, base *= 2) num += (s[i] - '0') *
+//   base; return num;
+// }
 
 inline string convertTo3baseStr(int num) {
   string res(in_bit_num, '0');
@@ -292,8 +265,8 @@ int main() {
 
   for (int i = 0; i < input.size(); ++i) {
     if (output[i][0] == '1' || output[i][0] == '2') {
-      int in_num_base3 = convertStr2NumBase3(input[i]);
-      int in_num_base2 = convertStr2NumBase2(input[i]);
+      int in_num_base3 = convertStr2Num<3>(input[i]);
+      int in_num_base2 = convertStr2Num<2>(input[i]);
       A[in_num_base3 * 3] = true;
       B[in_num_base2] = output[i][0] == '1';
     }
@@ -367,16 +340,15 @@ int main() {
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
+  // stop the timer
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+
   for (int num = 0; num < T; ++num) {
     if (C[num]) result.push_back(convertTo3baseStr(num));
   }
 
   sort(result.begin(), result.end());
-
-  // stop the timer
-  cudaEventRecord(stop);
-  cudaEventSynchronize(stop);
-
   for (auto tmp : result) cout << tmp << endl;
 
   float millisecond = 0;
@@ -390,81 +362,96 @@ int main() {
   cudaFree(d_C);
   cudaFree(d_B);
   return 0;
-
-  // to be parallelet
-  // for (int i = 0; i < 16; i++) {
-  //   auto it = std::find_if(buckets.begin(), buckets.end(),
-  //                          [](const vector<int>& a) { return a.size(); });
-  //   if (it == buckets.end()) break;
-
-  //   vector<vector<int>> next(17);
-  //   vector<bool> flag(v.size());
-
-  //   // update bucket
-  //   for (int j = 0; j < 16; ++j) {
-  //     for (auto a : buckets[j]) {
-  //       for (auto b : buckets[j + 1]) {
-  //         int res = checkBITs(16, v[a], v[b]);
-  //         if (res != -1) {  // can merge
-  //           flag[a] = 1, flag[b] = 1;
-  //           v[a][res] = '2';
-  //           next[j].push_back(a);
-  //         }
-  //       }
-  //       if (flag[a] == 0) prime.push_back(v[a]);
-  //     }
-  //   }
-  //   buckets = std::move(next);
-  // }
-
-  // int count;
-  // string temp;
-
-  // for (int i = 0; i < relative.size(); i++) {
-  //   if (relative[i].empty()) continue;
-
-  //   int count = 0, num = 0;
-  //   for (int j = 0; j < prime.size(); j++) {
-  //     if (prime.size() && comp(16, relative[i], prime[j])) {
-  //       if (++count > 1) break;
-  //       num = j;
-  //     }
-  //   }
-
-  //   if (count == 1) {  // essential prime implicant
-  //     result.push_back(prime[num]);
-  //     for (int j = 0; j < relative.size(); j++) {
-  //       if (relative[j].size() && comp(16, relative[j], prime[num])) {
-  //         relative[j] = "";
-  //       }
-  //     }
-  //     prime[num] = "";
-  //   }
-  // }
-
-  // int cnt_empty = std::count_if(relative.begin(), relative.end(),
-  //                               [](string a) { return a.size() == 0; });
-
-  // while (cnt_empty < relative.size()) {
-  //   do {
-  //     temp = prime.back();
-  //     prime.pop_back();
-  //   } while (temp.size() == 0 && prime.size());
-
-  //   count = 0;
-  //   for (int i = 0; i < relative.size(); i++) {
-  //     if (relative[i].size() && comp(16, relative[i], temp)) {
-  //       relative[i] = "";
-  //       cnt_empty++;
-  //       count++;
-  //     }
-  //   }
-  //   if (count > 0) {
-  //     result.push_back(temp);
-  //   }
-  // }
-
-  // cout << "result : " << endl;
-  // for (auto item : result) cout << item << endl;
-  // return 0;
 }
+
+// __global__ void takePrime(bool* A, int T, int NumThread, int* size, int*
+// primes,
+//                           Lock mylock) {
+//   int idx = threadIdx.x + blockIdx.x * blockDim.x;
+//   if (idx < NumThread) {
+//     for (int num = idx; num < T; num = num + NumThread) {
+//       if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
+//         mylock.lock();
+//         primes[(*size)++] = num;
+//         mylock.unlock();
+//       }
+//     }
+//   }
+// }
+
+// to be parallelet
+// for (int i = 0; i < 16; i++) {
+//   auto it = std::find_if(buckets.begin(), buckets.end(),
+//                          [](const vector<int>& a) { return a.size(); });
+//   if (it == buckets.end()) break;
+
+//   vector<vector<int>> next(17);
+//   vector<bool> flag(v.size());
+
+//   // update bucket
+//   for (int j = 0; j < 16; ++j) {
+//     for (auto a : buckets[j]) {
+//       for (auto b : buckets[j + 1]) {
+//         int res = checkBITs(16, v[a], v[b]);
+//         if (res != -1) {  // can merge
+//           flag[a] = 1, flag[b] = 1;
+//           v[a][res] = '2';
+//           next[j].push_back(a);
+//         }
+//       }
+//       if (flag[a] == 0) prime.push_back(v[a]);
+//     }
+//   }
+//   buckets = std::move(next);
+// }
+
+// int count;
+// string temp;
+
+// for (int i = 0; i < relative.size(); i++) {
+//   if (relative[i].empty()) continue;
+
+//   int count = 0, num = 0;
+//   for (int j = 0; j < prime.size(); j++) {
+//     if (prime.size() && comp(16, relative[i], prime[j])) {
+//       if (++count > 1) break;
+//       num = j;
+//     }
+//   }
+
+//   if (count == 1) {  // essential prime implicant
+//     result.push_back(prime[num]);
+//     for (int j = 0; j < relative.size(); j++) {
+//       if (relative[j].size() && comp(16, relative[j], prime[num])) {
+//         relative[j] = "";
+//       }
+//     }
+//     prime[num] = "";
+//   }
+// }
+
+// int cnt_empty = std::count_if(relative.begin(), relative.end(),
+//                               [](string a) { return a.size() == 0; });
+
+// while (cnt_empty < relative.size()) {
+//   do {
+//     temp = prime.back();
+//     prime.pop_back();
+//   } while (temp.size() == 0 && prime.size());
+
+//   count = 0;
+//   for (int i = 0; i < relative.size(); i++) {
+//     if (relative[i].size() && comp(16, relative[i], temp)) {
+//       relative[i] = "";
+//       cnt_empty++;
+//       count++;
+//     }
+//   }
+//   if (count > 0) {
+//     result.push_back(temp);
+//   }
+// }
+
+// cout << "result : " << endl;
+// for (auto item : result) cout << item << endl;
+// return 0;
