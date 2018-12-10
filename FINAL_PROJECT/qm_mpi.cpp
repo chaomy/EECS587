@@ -262,12 +262,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
       cmm.send(id + 1, 0, vec_buffs[end_id + 1]);
     }
 
-    if (id == 2) {
-      cout << " i = " << i << endl;
-      copy(vec_buffs[start_id].begin(), vec_buffs[start_id].end(),
-           std::ostream_iterator<string>(cout, "\n"));
-    }
-
     // insert start into prime
     for (auto str_a : old_begin_buckets) {
       if (vec_flags[start_id].find(str_a) == vec_flags[start_id].end() &&
@@ -422,4 +416,6 @@ void solve_set_cover_approx_greedy(vector<string>& relative,
 //     vec_buffs[end_id + 1] = vec_flags[end_id + 1];
 //     cmm.isend(id + 1, 0, vec_buffs[end_id + 1]);
 //   }
-// }  // loop over level
+// }  // loop over leve    // set<string, compareprime>
+// mdict(std::make_move_iterator(vec_primes.begin()),
+//                                 std::make_move_iterator(vec_primes.end()));l
