@@ -1,8 +1,8 @@
 clear all;
 close all;
 
-n = 130;
-m = 4;
+n = 130;		// num of bits 
+m = 4;	        // 	
 x = ones(n+1:1);
 y = ones(n:1);
 
@@ -13,6 +13,7 @@ end
 for i = 1:n
     y(i) = x(i)*x(i+1);
 end
+
 y_sum = sum(y);
 x_sum = sum(x);
 

@@ -6,7 +6,6 @@
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi/datatype_fwd.hpp>
 #include <boost/mpi/environment.hpp>
-#include <boost/mpi/inplace.hpp>
 #include <boost/mpi/operations.hpp>
 #include <boost/mpi/timer.hpp>
 #include <boost/serialization/map.hpp>
@@ -33,8 +32,7 @@ using std::vector;
 
 namespace mpi = boost::mpi;
 
-// mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi -lboost_serialization -lmpi  -o
-// qm_mpi  -O3 -g
+// mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi -lboost_serialization -lmpi  -o qm_mpi  -O3 -g
 
 bool comp(int n, const string& a, const string& b) {
   for (int i = 0; i < n; i++) {
