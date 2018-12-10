@@ -188,14 +188,6 @@ void readTrueTable(string fname) {
   getline(s, line);
   out_bit_num = stoi(line);
 
-  // read head
-  // while (getline(s, line) && (line != ".e")) {
-  //   vector<string> buff;
-  //   split(line, " ", buff);
-  //   input.push_back(buff[0]);
-  //   output.push_back(buff[1]);
-  // }
-
   string buff1, buff2;
   while (getline(s, buff1, ' ') && getline(s, buff2)) {
     input.push_back(buff1);

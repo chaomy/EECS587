@@ -12,6 +12,7 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/unordered_map.hpp>
+#include <boost/serialization/unordered_set.hpp>
 #include <boost/serialization/vector.hpp>
 #include <cmath>
 #include <cstdlib>
@@ -32,14 +33,17 @@ using std::vector;
 
 namespace mpi = boost::mpi;
 
-bool comp(int n, string a, string b) {
+// mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi -lboost_serialization -lmpi  -o
+// qm_mpi  -O3 -g
+
+bool comp(int n, const string& a, const string& b) {
   for (int i = 0; i < n; i++) {
     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
   }
   return true;
 }
 
-int checkbits(int n, string a, string b) {
+int checkbits(int n, const string& a, const string& b) {
   int count = 0, temp;
   for (int i = 0; i < n; ++i) {
     if (a[i] != b[i]) {
@@ -83,15 +87,15 @@ void prepinput(vector<string>& v, vector<string>& input,
 }
 
 struct {
-  bool operator()(string a, string b) {
+  bool operator()(const string& a, const string& b) {
     size_t score_a = std::count(a.begin(), a.end(), '2');
     size_t score_b = std::count(b.begin(), b.end(), '2');
-    return score_a == score_b ? true : score_a < score_b;
+    return score_a == score_b ? false : score_a < score_b;
   }
 } compareprime;
 
 template <const int Base>
-int convertStrToNum(string input) {
+int convertStrToNum(const string& input) {
   int res{0};
   for (int i = input.size() - 1, mul = 1; i >= 0; --i, mul *= Base)
     res = res + (input[i] - '0') * mul;
@@ -105,11 +109,15 @@ string convertNumToStr(int num, int in_bit_num) {
   return res;
 }
 
-string maskEmpty(string a, string b) { return a.empty() || b.empty() ? "" : a; }
+string maskEmpty(const string& a, const string& b) {
+  return a.empty() || b.empty() ? "" : a;
+}
 
-string mergeItem(string a, string b) {
+string mergeItem(const string& a, const string& b) {
   return a.empty() && b.empty() ? "" : a.empty() ? b : a;
 }
+
+bool notEmpty(const string& a) { return a.size(); }
 
 void find_results(mpi::communicator& cmm, vector<string>& vec_primes,
                   vector<string>& relative, vector<string>& result,
@@ -173,50 +181,12 @@ void find_results(mpi::communicator& cmm, vector<string>& vec_primes,
   reduce(cmm, local_res.data(), local_res.size(), result.data(), mergeItem,
          ROOT);
 
-  if (id == ROOT) cout << myclock.elapsed() << endl;
-
   if (id == ROOT) {
-    cout << "before erase " << result.size() << endl;
-    auto avail = result.begin();
-    for (auto it = result.begin(); it != result.end(); ++it) {
-      if (it->size()) {
-        *avail = *it;
-        avail++;
-      }
-    }
-    result.erase(avail, result.end());
-    cout << "after erase " << result.size() << endl;
+    cout << myclock.elapsed() << " ";
+    auto last = std::partition(result.begin(), result.end(), notEmpty);
+    result.erase(last, result.end());
+    cout << result.size() << endl;
   }
-}
-
-// qm step 2
-void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
-                         vector<string>& result, int in_bit_num) {
-  // find essential prime implicates
-  for (int i = 0; i < relative.size(); i++) {
-    if (relative[i].empty()) continue;
-
-    int count = 0, num = 0;
-    // go through all primes
-    for (int j = vec_primes.size() - 1; j >= 0; --j) {
-      if (vec_primes.size() && comp(in_bit_num, relative[i], vec_primes[j])) {
-        if (++count > 1) break;
-        num = j;
-      }
-    }
-
-    if (count == 1) {  // essential prime implicant
-      result.push_back(vec_primes[num]);
-      for (int j = 0; j < relative.size(); j++) {
-        if (relative[j].size() &&
-            comp(in_bit_num, relative[j], vec_primes[num])) {
-          relative[j] = "";
-        }
-      }
-      vec_primes[num] = "";
-    }
-  }
-  // solve_set_cover_one_solution(relative, vec_primes, result, in_bit_num);
 }
 
 void find_primes(mpi::communicator& cmm, vector<string>& v,
@@ -233,6 +203,8 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   int end_id = start_id + local_len - 1;
 
   vector<vector<string>> buckets(bucketsize), next(bucketsize);
+  vector<unordered_set<string>> vec_flags(bucketsize);
+  vector<unordered_set<string>> vec_buffs(bucketsize);
 
   for (auto key : v)
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
@@ -254,28 +226,69 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     all_reduce(cmm, localdone, totaldone, std::logical_and<bool>());
     if (totaldone) break;
 
-    // flag to record primes
-    unordered_set<string> flag;
+    // update buckets
+    for (int j = end_id; j >= start_id; --j) {
+      // before do the start_id must recieve from its neigh
+      if (j == start_id && id != firstworker) {
+        cmm.recv(id - 1, 0, vec_buffs[start_id]);
+      }
 
-    // update bucket
-    for (int j = start_id; j <= end_id; ++j) {
-      for (auto str_a : buckets[j]) {
-        for (auto str_b : buckets[j + 1]) {
+      for (auto str_b : buckets[j + 1]) {
+        for (auto str_a : buckets[j]) {
           int res = checkbits(in_bit_num, str_a, str_b);
-          if (res != -1) {  // can merge
-            flag.insert(str_a);
-            flag.insert(str_b);
+          if (res != -1) {
+            vec_flags[j].insert(str_a);
+            vec_flags[j + 1].insert(str_b);
             str_a[res] = '2';
             next[j].push_back(str_a);
             str_a[res] = '0';
           }
+        }  // loop over level j
+
+        // add prime
+        if (j != end_id &&
+            vec_flags[j + 1].find(str_b) == vec_flags[j + 1].end())
+          prime.insert(str_b);
+      }  // loop over level j + 1
+
+      if (j == start_id) {
+        for (auto str_a : buckets[j]) {
+          if (vec_flags[j].find(str_a) == vec_flags[j].end() &&
+              vec_buffs[j].find(str_a) == vec_buffs[j].end())
+            prime.insert(str_a);
         }
-        if (flag.find(str_a) == flag.end()) prime.insert(str_a);
       }
-      // update buckets j
-      buckets[j] = std::move(next[j]);
-    }
-    // communicates halo regime
+
+      // send when finished end_id
+      if (j == end_id && id != lastworker) {
+        vec_buffs[end_id + 1] = vec_flags[end_id + 1];
+        cmm.isend(id + 1, 0, vec_buffs[end_id + 1]);
+      }
+    }  // loop over level
+
+    // update bucket
+    // for (int j = start_id; j <= end_id; ++j) {
+    //   for (auto str_a : buckets[j]) {
+    //     for (auto str_b : buckets[j + 1]) {
+    //       int res = checkbits(in_bit_num, str_a, str_b);
+    //       if (res != -1) {  // can merge
+    //         vec_flags[j].insert(str_a);
+    //         vec_flags[j + 1].insert(str_b);
+    //         str_a[res] = '2';
+    //         next[j].push_back(str_a);
+    //         str_a[res] = '0';
+    //       }
+    //     }
+    //     if (vec_flags[j].find(str_a) == vec_flags[j].end() &&
+    //         (j != start_id || vec_buffs[j].find(str_a) ==
+    //         vec_buffs[j].end()))
+    //       prime.insert(str_a);
+    //   }
+    //   // update buckets j
+    //   buckets[j] = std::move(next[j]);
+    // }
+
+    // communicates
     if (id != firstworker) cmm.send(id - 1, 0, buckets[start_id]);
     if (id != lastworker) cmm.recv(id + 1, 0, buckets[end_id + 1]);
   }
@@ -304,25 +317,25 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
          ROOT);
   gather(cmm, local_prime_size, each_prime_sizes, ROOT);
 
-  if (cmm.rank() == ROOT) cout << myclock.elapsed() << endl;
+  if (cmm.rank() == ROOT) cout << myclock.elapsed() << " ";
 
   if (id == ROOT) {
     // convert gathered primes<int> to the vec_prime<string>
     for (int i = 0; i < worker_num; ++i) {
       int start = i * send_prime_size;
       int end = i * send_prime_size + each_prime_sizes[i];
-      cout << "start = " << start << " end = " << end << endl;
       vector<int> size_param(send_prime_size, in_bit_num);
 
       // assign vec_primes
       std::transform(vec_primes_all.begin() + start,
                      vec_primes_all.begin() + end, size_param.begin(),
                      std::back_inserter(vec_primes), convertNumToStr<3>);
+      std::sort(vec_primes.begin(), vec_primes.end(), compareprime);
     }
-    // sort the vec_primes
-    // std::sort(vec_primes.begin(), vec_primes.end(), comparePrime);
+    cout << vec_primes.size() << endl;
   }
 
+  // pass vec_primes to everyone
   broadcast(cmm, vec_primes, ROOT);
 
   // if (cmm.rank() == 2)
@@ -359,7 +372,6 @@ int main() {
 
   // sort(result.begin(), result.end());
   // for (auto item : result) cout << item << endl;
-  // cout << "time: " << duration << endl;
   return 0;
 }
 

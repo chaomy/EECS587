@@ -17,6 +17,8 @@ using std::string;
 using std::unordered_set;
 using std::vector;
 
+// g++ qm_serial.cpp -std=c++11 -o qm_serial -O3 -g
+
 int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
 vector<string> input, output;
@@ -70,6 +72,8 @@ void prepInput(vector<string>& v) {
   }
 }
 
+bool notEmpty(const string& a) { return a.size(); }
+
 struct {
   bool operator()(string a, string b) {
     size_t score_a = std::count(a.begin(), a.end(), '2');
@@ -79,8 +83,9 @@ struct {
 } comparePrime;
 
 // QM step 1
-void find_primes(vector<string>& v, vector<string>& vec_primes, int bit_num) {
-  vector<vector<string>> buckets(bit_num+1);
+void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
+                        int bit_num) {
+  vector<vector<string>> buckets(bit_num + 1);
 
   // store according to num of 1 bits
   unordered_set<string> prime;
@@ -88,14 +93,16 @@ void find_primes(vector<string>& v, vector<string>& vec_primes, int bit_num) {
   for (auto key : v)
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
 
+  std::clock_t start = std::clock();
+
   // to be parallelet
   for (int i = 0; i < bit_num; i++) {
     auto it = std::find_if(buckets.begin(), buckets.end(),
                            [](const vector<string>& a) { return a.size(); });
     if (it == buckets.end()) break;
 
-    vector<vector<string>> next(bit_num+1);
-    unordered_set<string> flag;
+    vector<vector<string>> next(bit_num + 1);
+    vector<unordered_set<string>> vec_flags(bit_num + 1);
 
     // update bucket
     for (int j = 0; j < bit_num; ++j) {
@@ -103,19 +110,23 @@ void find_primes(vector<string>& v, vector<string>& vec_primes, int bit_num) {
         for (auto str_b : buckets[j + 1]) {
           int res = checkBITs(in_bit_num, str_a, str_b);
           if (res != -1) {  // can merge
-            flag.insert(str_a);
-            flag.insert(str_b);
+            vec_flags[j].insert(str_a);
+            vec_flags[j + 1].insert(str_b);
             str_a[res] = '2';
             next[j].push_back(str_a);
             str_a[res] = '0';
           }
         }
-        if (flag.find(str_a) == flag.end()) prime.insert(str_a);
-      }
-    }
+        if (vec_flags[j].find(str_a) == vec_flags[j].end()) prime.insert(str_a);
+      }  // loop over all items on buket layer i
+      vec_flags[j].clear();
+    }  // loop over all layers
     buckets = std::move(next);
   }
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
+
+  cout << "Phase 1 " << (std::clock() - start) / (double)CLOCKS_PER_SEC << " "
+       << vec_primes.size() << endl;
   std::sort(vec_primes.begin(), vec_primes.end(), comparePrime);
 }
 
@@ -146,25 +157,11 @@ void solve_set_cover_one_solution(vector<string>& relative,
   }
 }
 
-/*
-1) Let I represents set of elements included so far.  Initialize I = {}
-
-2) Do following while I is not same as U.
-    a) Find the set Si in {S1, S2, ... Sm} whose cost effectiveness is
-       smallest, i.e., the ratio of cost C(Si) and number of newly added
-       elements is minimum.
-       Basically we pick the set for which following value is minimum.
-       Cost(Si) / |Si - I|
-    b) Add elements of above picked Si to I, i.e.,  I = I U Si
-*/
-
-void solve_set_cover_approx_greedy(vector<string>& relative,
-                                   vector<string>& vec_primes,
-                                   vector<string>& result) {}
-
 // QM step 2
-void find_results(vector<string>& vec_primes, vector<string>& relative,
-                  vector<string>& result) {
+void find_results_org(vector<string>& vec_primes, vector<string>& relative,
+                      vector<string>& result) {
+  std::clock_t start = std::clock();
+
   // find essential prime implicates
   for (int i = 0; i < relative.size(); i++) {
     if (relative[i].empty()) continue;
@@ -189,7 +186,54 @@ void find_results(vector<string>& vec_primes, vector<string>& relative,
     }
   }
 
-  solve_set_cover_one_solution(relative, vec_primes, result);
+  // solve_set_cover_one_solution(relative, vec_primes, result);
+  cout << "Phase 2 " << (std::clock() - start) / (double)CLOCKS_PER_SEC << endl;
+}
+
+void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
+                         vector<string>& result) {
+  std::clock_t start = std::clock();
+  result = vector<string>(vec_primes.size(), "");
+
+  // find essential prime implicates
+  for (int i = 0; i < relative.size(); i++) {
+    if (relative[i].empty()) continue;
+
+    int count = 0, num = 0;
+    for (int j = vec_primes.size() - 1; j >= 0; --j) {
+      if (vec_primes.size() && comp(in_bit_num, relative[i], vec_primes[j])) {
+        if (++count > 1) break;
+        num = j;
+      }
+    }
+
+    if (count == 1) {  // essential prime implicant
+      for (int j = 0; j < relative.size(); j++) {
+        if (relative[j].size() &&
+            comp(in_bit_num, relative[j], vec_primes[num])) {
+          relative[j] = "";
+        }
+      }
+      swap(result[num], vec_primes[num]);
+    }
+  }
+
+  for (int i = relative.size(); i >= 0; --i) {
+    if (relative[i].empty()) continue;
+    for (int j = vec_primes.size() - 1; j >= 0; --j) {
+      if (vec_primes[j].empty()) continue;
+      if (comp(in_bit_num, relative[i], vec_primes[j])) {
+        result[j] = vec_primes[j];
+        break;
+      }
+    }
+  }
+
+  auto last = std::partition(result.begin(), result.end(), notEmpty);
+  result.erase(last, result.end());
+
+  cout << "Phase 2 " << (std::clock() - start) / (double)CLOCKS_PER_SEC << " "
+       << result.size() << endl;
 }
 
 int main() {
@@ -203,20 +247,29 @@ int main() {
 
   vector<string> relative(v);
 
-  std::clock_t start = std::clock();
-
   // step 1
-  find_primes(v, vec_primes, in_bit_num);
-
-  // copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
+  find_primes_serial(v, vec_primes, in_bit_num);
 
   // step 2
-  find_results(vec_primes, relative, result);
+  find_results_serial(vec_primes, relative, result);
 
-  double duration = (std::clock() - start) / (double)CLOCKS_PER_SEC;
-
-  sort(result.begin(), result.end());
-  for (auto item : result) cout << item << endl;
-  cout << "time: " << duration << endl;
+  // sort(result.begin(), result.end());
+  // for (auto item : result) cout << item << endl;
   return 0;
 }
+
+/*
+1) Let I represents set of elements included so far.  Initialize I = {}
+
+2) Do following while I is not same as U.
+    a) Find the set Si in {S1, S2, ... Sm} whose cost effectiveness is
+       smallest, i.e., the ratio of cost C(Si) and number of newly added
+       elements is minimum.
+       Basically we pick the set for which following value is minimum.
+       Cost(Si) / |Si - I|
+    b) Add elements of above picked Si to I, i.e.,  I = I U Si
+*/
+
+void solve_set_cover_approx_greedy(vector<string>& relative,
+                                   vector<string>& vec_primes,
+                                   vector<string>& result) {}
