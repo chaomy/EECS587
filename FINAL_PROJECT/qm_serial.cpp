@@ -26,6 +26,7 @@ vector<string> in_labels, out_labels;
 vector<string> input, output;
 
 bool comp(int n, string a, string b) {
+  if (a.empty() || b.empty()) return false;
   for (int i = 0; i < n; i++) {
     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
   }
