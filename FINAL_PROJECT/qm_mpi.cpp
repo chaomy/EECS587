@@ -40,7 +40,8 @@ namespace mpi = boost::mpi;
 
 // mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi -lboost_serialization -lmpi  -o
 // qm_mpi  -O3 -g
-// mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi-mt -lboost_serialization-mt  -o qm_mpi  -O3 -g -L${BOOST_LIB} -I${BOOST_INCLUDE}
+// mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi-mt -lboost_serialization-mt  -o
+// qm_mpi  -O3 -g -L${BOOST_LIB} -I${BOOST_INCLUDE}
 
 double time1{0}, time2{0};
 
@@ -102,15 +103,15 @@ struct compareprime {
   }
 };
 
-template <const int Base>
+template <const uint64_t Base>
 uint64_t convertStrToNum(const string& input) {
-  uint64_t res{0};
-  for (int i = input.size() - 1, mul = 1; i >= 0; --i, mul *= Base)
+  uint64_t res{0}, mul = 1;
+  for (int i = input.size() - 1; i >= 0; --i, mul *= Base)
     res = res + (input[i] - '0') * mul;
   return res;
 }
 
-template <const int Base>
+template <const uint64_t Base>
 string convertNumToStr(uint64_t num, int in_bit_num) {
   string res(in_bit_num, '0');
   for (int p = in_bit_num - 1; num; num /= Base) res[p--] = (num % Base) + '0';
