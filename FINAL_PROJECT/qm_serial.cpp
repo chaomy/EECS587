@@ -255,7 +255,7 @@ void runQM(int jobid) {
   find_primes_serial(v, vec_primes, in_bit_num);
 
   // step 2
-  find_results_serial(vec_primes, relative, result);
+  // find_results_serial(vec_primes, relative, result);
 
   cout << std::setprecision(8) << std::setw(10);
   cout << in_bit_num << " " << time1 << " " << time2 << endl;
