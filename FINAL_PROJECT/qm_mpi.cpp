@@ -208,6 +208,11 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   vector<vector<string>> buckets(bucketsize), next(bucketsize);
   vector<unordered_set<string>> vec_flags(bucketsize), vec_buffs(bucketsize);
 
+  // cout << "I am " << id << " start " << start_id << " end " << end_id
+  //      << " bucketsize " << bucketsize << " vec_primes "
+  //      << vec_primes_local.size() << " send size " << send_prime_size <<
+  //      endl;
+
   for (auto key : v)
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
 
@@ -258,7 +263,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     }
 
     if (id != lastworker) {
-      vec_buffs[end_id + 1] = vec_flags[end_id + 1];
+      vec_buffs[end_id + 1] = std::move(vec_flags[end_id + 1]);
       cmm.send(id + 1, 0, vec_buffs[end_id + 1]);
     }
 
@@ -278,17 +283,12 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   int local_prime_size = vec_primes_local.size();
   int total_prime_size{0}, send_prime_size{0};
 
-  // cout << "I am " << id << " start " << start_id << " end " << end_id
-  //      << " bucketsize " << bucketsize << " vec_primes "
-  //      << vec_primes_local.size() << " send size " << send_prime_size <<
-  //      endl;
-
   all_reduce(cmm, local_prime_size, send_prime_size, mpi::maximum<int>());
 
   vec_primes_local.resize(send_prime_size);
 
   vector<int> each_prime_sizes(worker_num);
-  vec_primes_all.reserve(send_prime_size * worker_num);
+  vec_primes_all.resize(send_prime_size * worker_num);
 
   gather(cmm, vec_primes_local.data(), send_prime_size, vec_primes_all.data(),
          ROOT);
