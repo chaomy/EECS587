@@ -356,7 +356,7 @@ void runQMgpu(int jobid, int blocksize) {
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&time2, start, stop);
 
-  cout << in_bit_num << " " << time1 << " " << time2 << endl;
+  cout << BLOCK_X << " " << in_bit_num << " " << time1 << " " << time2 << endl;
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
