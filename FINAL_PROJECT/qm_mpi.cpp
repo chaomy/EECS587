@@ -211,7 +211,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   int worker_num = assignments.size(), id = cmm.rank();
   int firstworker{0}, lastworker{worker_num - 1};
   int start_id = assignments[id];
-  int end_id = id == lastworker ? in_bit_num : assignments[id + 1] - 1;
+  int end_id = id == lastworker ? in_bit_num - 1 : assignments[id + 1] - 1;
 
   vector<vector<string>> buckets(bucketsize), next(bucketsize);
   vector<unordered_set<string>> vec_flags(bucketsize), vec_buffs(bucketsize);
@@ -231,6 +231,8 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
 
   // record time for finding primes
   mpi::timer myclock;
+
+  cout << "I am " << id << " start " << start_id << " end " << end_id << endl;
 
   for (int i = 0; i < in_bit_num; ++i) {
     bool localdone{false};
@@ -333,7 +335,7 @@ void find_primes_org(mpi::communicator& cmm, vector<string>& v,
   int worker_num = assignments.size(), id = cmm.rank();
   int firstworker{0}, lastworker{worker_num - 1};
   int start_id = assignments[id];
-  int end_id = id == lastworker ? in_bit_num : assignments[id + 1] - 1;
+  int end_id = id == lastworker ? in_bit_num - 1 : assignments[id + 1] - 1;
 
   vector<vector<string>> buckets(bucketsize), next(bucketsize);
   vector<set<string>> vec_flags(bucketsize), vec_buffs(bucketsize);
@@ -522,7 +524,7 @@ void runQMmpi(int jobid) {
   broadcast(cmm, vec_primes, ROOT);
 
   // step 2
-  // find_results(cmm, vec_primes, relative, result, in_bit_num, assignments);
+  find_results(cmm, vec_primes, relative, result, in_bit_num, assignments);
 
   if (cmm.rank() == ROOT) {
     cout << std::setprecision(8) << std::setw(10);
