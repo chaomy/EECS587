@@ -46,7 +46,7 @@ namespace mpi = boost::mpi;
 
 double time1{0}, time2{0};
 bool comp(int n, const string& a, const string& b) {
-  if (a.empty() || b.empty()) return false; 
+  if (a.empty() || b.empty()) return false;
   for (int i = 0; i < n; ++i) {
     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
   }
@@ -54,6 +54,7 @@ bool comp(int n, const string& a, const string& b) {
 }
 
 int checkbits(int n, const string& a, const string& b) {
+  if (a.empty() || b.empty()) return -1;
   int count = 0, temp;
   for (int i = 0; i < n; ++i) {
     if (a[i] != b[i]) {
@@ -98,6 +99,7 @@ void prepinput(vector<string>& v, vector<string>& input,
 
 struct compareprime {
   bool operator()(const string& a, const string& b) {
+    if (a.empty() || b.empty()) return a < b;
     size_t score_a = std::count(a.begin(), a.end(), '2');
     size_t score_b = std::count(b.begin(), b.end(), '2');
     return score_a == score_b ? a < b : score_a < score_b;
@@ -106,6 +108,7 @@ struct compareprime {
 
 template <const uint64_t Base>
 uint64_t convertStrToNum(const string& input) {
+  if (input.empty()) return 0;
   uint64_t res{0}, mul = 1;
   for (int i = input.size() - 1; i >= 0; --i, mul *= Base)
     res = res + (input[i] - '0') * mul;

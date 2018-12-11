@@ -68,7 +68,6 @@ void readtruetable(string fname) {
 void prepinput(vector<string>& v) {
   size_t n{input.size()};
   v.reserve(n);
-
   for (int i = 0; i < n; ++i) {
     if (output[i][0] == '1' || output[i][0] == '2') {
       v.push_back(input[i]);
@@ -78,14 +77,14 @@ void prepinput(vector<string>& v) {
 
 bool notempty(const string& a) { return a.size(); }
 
-struct {
-  bool operator()(string a, string b) {
-    if (a.empty() || b.empty()) return false;
+struct compareprime {
+  bool operator()(const string& a, const string& b) {
+    if (a.empty() || b.empty()) return a < b;
     size_t score_a = std::count(a.begin(), a.end(), '2');
     size_t score_b = std::count(b.begin(), b.end(), '2');
-    return score_a == score_b ? false : score_a < score_b;
+    return score_a == score_b ? a < b : score_a < score_b;
   }
-} compareprime;
+};
 
 // qm step 1
 void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
@@ -129,9 +128,8 @@ void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
     buckets = std::move(next);
   }
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
-
   time1 = (std::clock() - start) / double(CLOCKS_PER_SEC);
-  // std::sort(vec_primes.begin(), vec_primes.end(), compareprime);
+  // std::sort(vec_primes.begin(), vec_primes.end(), compareprime());
 }
 
 // solve set cover problem by finding one solution
