@@ -220,8 +220,8 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   // record time for finding primes
   mpi::timer myclock;
 
-  // for (int i = 0; i < in_bit_num; ++i) {
-  for (int i = 0; i < 1; ++i) {
+  return;
+  for (int i = 0; i < in_bit_num; ++i) {
     bool localdone{false};
     auto it =
         std::find_if(buckets.begin() + start_id, buckets.begin() + end_id + 1,
