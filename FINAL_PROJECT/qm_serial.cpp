@@ -75,7 +75,7 @@ void prepinput(vector<string>& v) {
   }
 }
 
-bool notempty(const string& a) { return a.size(); }
+bool notempty(const string& a) { return a != "0"; }
 
 struct compareprime {
   bool operator()(const string& a, const string& b) {
@@ -197,15 +197,15 @@ void find_results_org(vector<string>& vec_primes, vector<string>& relative,
 void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
                          vector<string>& result) {
   std::clock_t start = std::clock();
-  result = vector<string>(vec_primes.size());
+  result = vector<string>(vec_primes.size(), "0");
 
   // find essential prime implicates
   for (int i = 0; i < relative.size(); i++) {
-    if (relative[i].empty()) continue;
+    if (relative[i] == "0") continue;
 
     int count = 0, num = 0;
     for (int j = vec_primes.size() - 1; j >= 0; --j) {
-      if (vec_primes[j].size() &&
+      if (vec_primes[j] != "0" &&
           comp(in_bit_num, relative[i], vec_primes[j])) {
         if (++count > 1) break;
         num = j;
@@ -214,19 +214,20 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
 
     if (count == 1) {  // essential prime implicant
       for (int j = 0; j < relative.size(); j++) {
-        if (relative[j].size() &&
+        if (relative[j] != "0" &&
             comp(in_bit_num, relative[j], vec_primes[num])) {
-          relative[j] = "";
+          relative[j] = "0";
         }
       }
-      swap(result[num], vec_primes[num]);
+      result[num] = vec_primes[num];
+      vec_primes[num] = "0";
     }
   }
 
   for (int i = relative.size(); i >= 0; --i) {
-    if (relative[i].empty()) continue;
+    if (relative[i] == "0") continue;
     for (int j = vec_primes.size() - 1; j >= 0; --j) {
-      if (vec_primes[j].empty()) continue;
+      if (vec_primes[j] == "0") continue;
       if (comp(in_bit_num, relative[i], vec_primes[j])) {
         result[j] = vec_primes[j];
         break;
