@@ -123,11 +123,11 @@ string convertNumToStr(uint64_t num, int in_bit_num) {
 }
 
 string maskEmpty(const string& a, const string& b) {
-  return a.empty() || b.empty() ? "" : a;
+  return a == "0" || b == "0" ? "0" : a;
 }
 
 string mergeItem(const string& a, const string& b) {
-  return a.empty() && b.empty() ? "" : a.empty() ? b : a;
+  return a == "0" && b == "0" ? "0" : a == "0" ? b : a;
 }
 
 bool notEmpty(const string& a) { return a.size(); }
@@ -144,19 +144,20 @@ void find_results(mpi::communicator& cmm, vector<string>& vec_primes,
 
   vector<string> masked_relative(relative);
   vector<string> masked_primes(vec_primes);
-  vector<string> local_res(vec_primes.size());
+  vector<string> local_res(vec_primes.size(), "0");
   result = local_res;
 
   mpi::timer myclock;
 
   for (int i = start_id; i <= end_id; ++i) {
-    if (relative[i].empty()) continue;
+    if (relative[i] == "0") continue;
 
     int count = 0, record_id = 0;
 
     // go through all primes backward to check for essential implicates
     for (int j = vec_primes.size() - 1; j >= 0; --j) {
-      if (vec_primes.size() && comp(in_bit_num, relative[i], vec_primes[j])) {
+      if (vec_primes[j] != "0" &&
+          comp(in_bit_num, relative[i], vec_primes[j])) {
         if (++count > 1) break;
         record_id = j;
       }
@@ -165,10 +166,12 @@ void find_results(mpi::communicator& cmm, vector<string>& vec_primes,
     // use essential prime implicates to mask relatives
     if (count == 1) {
       for (auto& org : relative) {
-        if (org.size() && comp(in_bit_num, org, vec_primes[record_id]))
-          org = "";
+        if (org != "0" && comp(in_bit_num, org, vec_primes[record_id]))
+          org = "0";
       }
-      std::swap(local_res[record_id], vec_primes[record_id]);
+
+      local_res[record_id] = vec_primes[record_id];
+      vec_primes[record_id] = "0";
     }
   }
 
