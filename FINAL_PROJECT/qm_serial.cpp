@@ -34,6 +34,7 @@ bool comp(int n, string a, string b) {
 }
 
 int checkbits(int n, string a, string b) {
+  if (a.empty() || b.empty()) return -1;
   int count = 0, temp;
   for (int i = 0; i < n; ++i) {
     if (a[i] != b[i]) {
@@ -79,6 +80,7 @@ bool notempty(const string& a) { return a.size(); }
 
 struct {
   bool operator()(string a, string b) {
+    if (a.empty() || b.empty()) return false;
     size_t score_a = std::count(a.begin(), a.end(), '2');
     size_t score_b = std::count(b.begin(), b.end(), '2');
     return score_a == score_b ? false : score_a < score_b;
