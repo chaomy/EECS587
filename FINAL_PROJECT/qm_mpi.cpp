@@ -40,8 +40,7 @@ namespace mpi = boost::mpi;
 
 // mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi -lboost_serialization -lmpi  -o
 // qm_mpi  -O3 -g
-// mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi-mt -lboost_serialization-mt  -o
-// qm_mpi  -O3 -g -L${BOOST_LIB} -I${BOOST_INCLUDE}
+// mpic++ qm_mpi.cpp  -std=c++11 -lboost_mpi-mt -lboost_serialization-mt  -o qm_mpi  -O3 -g -L${BOOST_LIB} -I${BOOST_INCLUDE}
 
 double time1{0}, time2{0};
 
