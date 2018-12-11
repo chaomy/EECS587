@@ -216,10 +216,10 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   vector<vector<string>> buckets(bucketsize), next(bucketsize);
   vector<unordered_set<string>> vec_flags(bucketsize), vec_buffs(bucketsize);
 
-  for (auto& bucket : buckets) bucket.reserve(100000);
-  for (auto& bucket : next) bucket.reserve(100000);
-  for (auto& flags : vec_flags) flags.reserve(100000);
-  for (auto& flags : vec_buffs) flags.reserve(100000);
+  for (auto& bucket : buckets) bucket.reserve(10000);
+  for (auto& bucket : next) bucket.reserve(10000);
+  for (auto& flags : vec_flags) flags.reserve(10000);
+  for (auto& flags : vec_buffs) flags.reserve(10000);
 
   for (auto key : v)
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
@@ -231,8 +231,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
 
   // record time for finding primes
   mpi::timer myclock;
-
-  cout << "I am " << id << " start " << start_id << " end " << end_id << endl;
 
   for (int i = 0; i < in_bit_num; ++i) {
     bool localdone{false};
