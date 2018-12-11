@@ -89,7 +89,7 @@ struct compareprime {
 // qm step 1
 void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
                         int bit_num) {
-  vector<vector<string>> buckets(bit_num + 1);
+  vector<vector<string>> buckets(bit_num + 1, vector<string>());
 
   // store according to num of 1 bits
   unordered_set<string> prime;
@@ -101,12 +101,14 @@ void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
 
   // to be parallelet
   for (int i = 0; i < bit_num; i++) {
-    auto it = std::find_if(buckets.begin(), buckets.end(),
-                           [](const vector<string>& a) { return a.size(); });
+    auto it =
+        std::find_if(buckets.begin(), buckets.end(),
+                     [](const vector<string>& a) { return a.size() > 0; });
     if (it == buckets.end()) break;
 
-    vector<vector<string>> next(bit_num + 1);
-    vector<unordered_set<string>> vec_flags(bit_num + 1);
+    vector<vector<string>> next(bit_num + 1, vector<string>());
+    vector<unordered_set<string>> vec_flags(bit_num + 1,
+                                            unordered_set<string>());
 
     // update bucket
     for (int j = 0; j < bit_num; ++j) {
@@ -251,7 +253,7 @@ void runQM(int jobid) {
   find_primes_serial(v, vec_primes, in_bit_num);
 
   // step 2
-  find_results_serial(vec_primes, relative, result);
+  // find_results_serial(vec_primes, relative, result);
 
   cout << std::setprecision(8) << std::setw(10);
   cout << in_bit_num << " " << time1 << " " << time2 << endl;
