@@ -275,6 +275,8 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     }
   }
 
+  return; 
+
   vector<uint64_t> vec_primes_local, vec_primes_all;
   std::transform(prime.begin(), prime.end(),
                  std::back_inserter(vec_primes_local), convertStrToNum<3>);
@@ -395,7 +397,6 @@ void runQMmpi(int jobid) {
 
   // mpi::communicator subcmm = cmm.split(cmm.rank() < assignments.size());
 
-  return; 
   // step 1
   find_primes(cmm, v, vec_primes, in_bit_num, assignments);
 
