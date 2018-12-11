@@ -75,7 +75,7 @@ void prepinput(vector<string>& v) {
   }
 }
 
-bool notempty(const string& a) { return a.size(); }
+bool notempty(const string& a) { return a != "0"; }
 
 struct compareprime {
   bool operator()(const string& a, const string& b) {
@@ -197,15 +197,16 @@ void find_results_org(vector<string>& vec_primes, vector<string>& relative,
 void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
                          vector<string>& result) {
   std::clock_t start = std::clock();
-  result = vector<string>(vec_primes.size(), "");
+  result = vector<string>(vec_primes.size(), "0");
 
   // find essential prime implicates
   for (int i = 0; i < relative.size(); i++) {
-    if (relative[i].empty()) continue;
+    if (relative[i] == "0") continue;
 
     int count = 0, num = 0;
     for (int j = vec_primes.size() - 1; j >= 0; --j) {
-      if (vec_primes.size() && comp(in_bit_num, relative[i], vec_primes[j])) {
+      if (vec_primes[j] != "0" &&
+          comp(in_bit_num, relative[i], vec_primes[j])) {
         if (++count > 1) break;
         num = j;
       }
@@ -215,7 +216,7 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
       for (int j = 0; j < relative.size(); j++) {
         if (relative[j].size() &&
             comp(in_bit_num, relative[j], vec_primes[num])) {
-          relative[j] = "";
+          relative[j] = "0";
         }
       }
       swap(result[num], vec_primes[num]);
@@ -223,9 +224,9 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
   }
 
   for (int i = relative.size(); i >= 0; --i) {
-    if (relative[i].empty()) continue;
+    if (relative[i] == "0") continue;
     for (int j = vec_primes.size() - 1; j >= 0; --j) {
-      if (vec_primes[j].empty()) continue;
+      if (vec_primes[j] == "0") continue;
       if (comp(in_bit_num, relative[i], vec_primes[j])) {
         result[j] = vec_primes[j];
         break;
@@ -253,7 +254,7 @@ void runQM(int jobid) {
   find_primes_serial(v, vec_primes, in_bit_num);
 
   // step 2
-  // find_results_serial(vec_primes, relative, result);
+  find_results_serial(vec_primes, relative, result);
 
   cout << std::setprecision(8) << std::setw(10);
   cout << in_bit_num << " " << time1 << " " << time2 << endl;
