@@ -75,7 +75,7 @@ void prepinput(vector<string>& v) {
   }
 }
 
-bool notempty(const string& a) { return a != "0"; }
+bool notempty(const string& a) { return a.size(); }
 
 struct compareprime {
   bool operator()(const string& a, const string& b) {
@@ -197,15 +197,15 @@ void find_results_org(vector<string>& vec_primes, vector<string>& relative,
 void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
                          vector<string>& result) {
   std::clock_t start = std::clock();
-  result = vector<string>(vec_primes.size(), "0");
+  result = vector<string>(vec_primes.size());
 
   // find essential prime implicates
   for (int i = 0; i < relative.size(); i++) {
-    if (relative[i] == "0") continue;
+    if (relative[i].empty()) continue;
 
     int count = 0, num = 0;
     for (int j = vec_primes.size() - 1; j >= 0; --j) {
-      if (vec_primes[j] != "0" &&
+      if (vec_primes[j].size() &&
           comp(in_bit_num, relative[i], vec_primes[j])) {
         if (++count > 1) break;
         num = j;
@@ -216,7 +216,7 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
       for (int j = 0; j < relative.size(); j++) {
         if (relative[j].size() &&
             comp(in_bit_num, relative[j], vec_primes[num])) {
-          relative[j] = "0";
+          relative[j] = "";
         }
       }
       swap(result[num], vec_primes[num]);
@@ -224,9 +224,9 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
   }
 
   for (int i = relative.size(); i >= 0; --i) {
-    if (relative[i] == "0") continue;
+    if (relative[i].empty()) continue;
     for (int j = vec_primes.size() - 1; j >= 0; --j) {
-      if (vec_primes[j] == "0") continue;
+      if (vec_primes[j].empty()) continue;
       if (comp(in_bit_num, relative[i], vec_primes[j])) {
         result[j] = vec_primes[j];
         break;
