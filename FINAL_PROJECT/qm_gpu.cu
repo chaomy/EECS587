@@ -38,18 +38,18 @@ using std::vector;
 //   __device__ void unlock() { atomicExch(mutex, 0); }
 // };
 
-inline void split(const string& s, const char* delim, vector<string>& v) {
-  // duplicate original string, return a char pointer and free  memories
-  char* dup = strdup(s.c_str());
-  char* token = strtok(dup, delim);
-  while (token != NULL) {
-    v.push_back(string(token));
-    // the call is treated as a subsequent calls to strtok:
-    // the function continues from where it left in previous invocation
-    token = strtok(NULL, delim);
-  }
-  free(dup);
-}
+// inline void split(const string& s, const char* delim, vector<string>& v) {
+//   // duplicate original string, return a char pointer and free  memories
+//   char* dup = strdup(s.c_str());
+//   char* token = strtok(dup, delim);
+//   while (token != NULL) {
+//     v.push_back(string(token));
+//     // the call is treated as a subsequent calls to strtok:
+//     // the function continues from where it left in previous invocation
+//     token = strtok(NULL, delim);
+//   }
+//   free(dup);
+// }
 
 int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
@@ -60,24 +60,25 @@ vector<string> input, output;
   A[num * 3 + 1], if find next
   A[num * 3 + 2], if self is found by previous
 */
-__global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+__global__ void update(bool* A, uint64_t T, int numBit, uint64_t NumThread,
+                       int numof2) {
+  uint64_t idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread) {
-    for (int num = idx; num < T; num += NumThread) {
+    for (uint64_t num = idx; num < T; num += NumThread) {
       if (A[3 * num] == 0) continue;
       int cnt_2 = 0;
       // convert 2 base to 3 base, count 2
-      for (int tmp = num; tmp; tmp /= 3) {
+      for (uint64_t tmp = num; tmp; tmp /= 3) {
         cnt_2 += (tmp % 3 == 2);
       }
 
       if (cnt_2 != numof2) continue;
 
-      for (int tmp = num, cnt = 0, exp = 1; cnt < numBit;
+      for (uint64_t tmp = num, cnt = 0, exp = 1; cnt < numBit;
            tmp /= 3, exp *= 3, ++cnt) {
         // only look  for pairs when the bit is 0
         if (tmp % 3 == 0) {
-          int next = num + exp;
+          uint64_t next = num + exp;
           if (A[3 * next]) {
             A[3 * (next + exp)] = true;
             A[3 * num + 1] = true;
@@ -89,7 +90,7 @@ __global__ void update(bool* A, int T, int numBit, int NumThread, int numof2) {
   }
 }
 
-inline __device__ bool comp(int n, int num_base2, int num_base3) {
+inline __device__ bool comp(int n, uint64_t num_base2, uint64_t num_base3) {
   for (; num_base2 || num_base3; num_base2 /= 2, num_base3 /= 3) {
     int ai = num_base2 % 2;
     int bi = num_base3 % 3;
@@ -121,9 +122,10 @@ inline __device__ bool comp(int n, int num_base2, int num_base3) {
 //   }
 // }
 
-__global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
-                                    int prime_size, int numBit, int NumThread) {
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+__global__ void findEssentialPrimes(bool* B, bool* C, uint64_t* primes,
+                                    int prime_size, int numBit,
+                                    uint64_t NumThread) {
+  uint64_t idx = threadIdx.x + blockIdx.x * blockDim.x;
   int first_meet = -1;
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
@@ -140,11 +142,13 @@ __global__ void findEssentialPrimes(bool* B, bool* C, int* primes,
     }
   }
 }
-__global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
-                              int numBit, int NumThread) {
+
+// mask relatives that is related to essential primes
+__global__ void maskRelatives(bool* B, bool* C, uint64_t* primes,
+                              int prime_size, int numBit, uint64_t NumThread) {
   // C is essential primes, C[num] = '1' means num is an essential prime
   // B is relatives
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  uint64_t idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread && B[idx]) {
     for (int i = prime_size - 1; i >= 0; --i) {
       if (C[primes[i]] && comp(numBit, idx, primes[i])) {
@@ -153,9 +157,10 @@ __global__ void maskRelatives(bool* B, bool* C, int* primes, int prime_size,
     }
   }
 }
-__global__ void findResults(bool* B, bool* C, int* primes, int prime_size,
-                            int numBit, int NumThread) {
-  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+__global__ void findResults(bool* B, bool* C, uint64_t* primes, int prime_size,
+                            int numBit, uint64_t NumThread) {
+  uint64_t idx = threadIdx.x + blockIdx.x * blockDim.x;
   if (idx < NumThread && B[idx]) {  // is a relative
     for (int i = prime_size - 1; i >= 0; --i) {
       if (comp(numBit, idx, primes[i])) {
@@ -196,39 +201,28 @@ void readTrueTable(string fname) {
 }
 
 template <const int Base>
-inline int convertStr2Num(string s) {
-  int num{0}, base{1};
+inline uint64_t convertStr2Num(string s) {
+  uint64_t num{0}, base{1};
   for (int i = s.size() - 1; i >= 0; --i, base *= Base)
     num += (s[i] - '0') * base;
   return num;
 }
 
-// inline int convertStr2NumBase3(string s) {
-//   int num{0}, base{1};
-//   for (int i = s.size() - 1; i >= 0; --i, base *= 3) num += (s[i] - '0') *
-//   base; return num;
-// }
-
-// inline int convertStr2NumBase2(string s) {
-//   int num{0}, base{1};
-//   for (int i = s.size() - 1; i >= 0; --i, base *= 2) num += (s[i] - '0') *
-//   base; return num;
-// }
-
-inline string convertTo3baseStr(int num) {
+inline string convertTo3baseStr(uint64_t num) {
   string res(in_bit_num, '0');
-  for (int p = in_bit_num - 1; num; num /= 3) res[p--] = (num % 3) + '0';
+  for (uint64_t p = in_bit_num - 1; num; num /= 3) res[p--] = (num % 3) + '0';
   return res;
 }
 
-struct {
-  bool operator()(int a, int b) {
+template <typename T>
+struct comparePrime {
+  bool operator()(T a, T b) {
     int cnta{0}, cntb{0};
     for (; a; a /= 3) cnta += (a % 3 == 2);
     for (; b; b /= 3) cntb += (b % 3 == 2);
     return cnta == cntb ? false : cnta < cntb;
   }
-} comparePrime;
+};
 
 void runQMgpu(int jobid, int blocksize) {
   int BLOCK_X = blocksize;
@@ -244,44 +238,45 @@ void runQMgpu(int jobid, int blocksize) {
   // cout << "Input " << endl;
   // std::copy(v.begin(), v.end(), std::ostream_iterator<string>(cout, "\n"));
 
-  int T{static_cast<int>(pow(3, in_bit_num))};
-  int T3(T * 3);
+  uint64_t T{static_cast<uint64_t>(pow(3, in_bit_num))};
+  uint64_t T3(T * 3);
   int prime_size_limit{100000000};
 
-  size_t nBytes = T3 * sizeof(bool);
+  size_t nBytesA = T3 * sizeof(bool);
   size_t nBytesB = (1 << in_bit_num) * sizeof(bool);
   size_t nBytesC = T * sizeof(bool);
 
-  bool* A = (bool*)malloc(nBytes);
+  bool* A = (bool*)malloc(nBytesA);
   bool* B = (bool*)malloc(nBytesB);
   bool* C = (bool*)malloc(nBytesC);
 
-  int* primes = (int*)malloc(prime_size_limit * sizeof(int));
+  uint64_t* primes = (uint64_t*)malloc(prime_size_limit * sizeof(uint64_t));
 
   // initialize
-  memset(A, false, nBytes);
+  memset(A, false, nBytesA);
   memset(B, false, nBytesB);
   memset(C, false, nBytesC);
 
   for (int i = 0; i < input.size(); ++i) {
     if (output[i][0] == '1' || output[i][0] == '2') {
-      int in_num_base3 = convertStr2Num<3>(input[i]);
-      int in_num_base2 = convertStr2Num<2>(input[i]);
+      uint64_t in_num_base3 = convertStr2Num<3>(input[i]);
+      uint64_t in_num_base2 = convertStr2Num<2>(input[i]);
       A[in_num_base3 * 3] = true;
       B[in_num_base2] = output[i][0] == '1';
     }
   }
 
-  bool* d_A;      // whole space
-  bool* d_B;      // mark relative
-  bool* d_C;      // mark final results
-  int* d_primes;  // vector of primes implicates
+  bool* d_A;  // whole space
+  bool* d_B;  // mark relative
+  bool* d_C;  // mark final results
 
-  cudaMalloc((bool**)&d_A, nBytes);
+  uint64_t* d_primes;  // vector of primes implicates
+
+  cudaMalloc((bool**)&d_A, nBytesA);
   cudaMalloc((bool**)&d_B, nBytesB);
   cudaMalloc((bool**)&d_C, nBytesC);
 
-  cudaMemcpy(d_A, A, nBytes, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_A, A, nBytesA, cudaMemcpyHostToDevice);
   cudaMemcpy(d_B, B, nBytesB, cudaMemcpyHostToDevice);
   cudaMemcpy(d_C, C, nBytesC, cudaMemcpyHostToDevice);
 
@@ -307,10 +302,10 @@ void runQMgpu(int jobid, int blocksize) {
   cudaEventSynchronize(stop);
   cudaEventElapsedTime(&time1, start, stop);
 
-  cudaMemcpy(A, d_A, nBytes, cudaMemcpyDeviceToHost);
+  cudaMemcpy(A, d_A, nBytesA, cudaMemcpyDeviceToHost);
 
-  int avail = 0;
-  for (int num = 0; num < T; ++num) {
+  uint64_t avail = 0;
+  for (uint64_t num = 0; num < T; ++num) {
     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
       primes[avail++] = num;
       if (avail == prime_size_limit - 10) {
@@ -327,11 +322,11 @@ void runQMgpu(int jobid, int blocksize) {
   }
 
   // sort based on num of '2' in the prime
-  std::sort(primes, primes + avail, comparePrime);
-  // std::copy(primes, primes + avail, std::ostream_iterator<int>(cout, "\n"));
+  std::sort(primes, primes + avail, comparePrime<uint64_t>());
 
-  cudaMalloc((int**)&d_primes, prime_size_limit * sizeof(int));
-  cudaMemcpy(d_primes, primes, avail * sizeof(int), cudaMemcpyHostToDevice);
+  cudaMalloc((uint64_t**)&d_primes, prime_size_limit * sizeof(uint64_t));
+  cudaMemcpy(d_primes, primes, avail * sizeof(uint64_t),
+             cudaMemcpyHostToDevice);
 
   cudaEventCreate(&start);
   cudaEventCreate(&stop);
@@ -360,11 +355,8 @@ void runQMgpu(int jobid, int blocksize) {
 
   cudaMemcpy(C, d_C, nBytesC, cudaMemcpyDeviceToHost);
 
-  for (int num = 0; num < T; ++num) {
+  for (uint64_t num = 0; num < T; ++num)
     if (C[num]) result.push_back(convertTo3baseStr(num));
-  }
-
-  sort(result.begin(), result.end());
 
   free(A);
   free(B);
