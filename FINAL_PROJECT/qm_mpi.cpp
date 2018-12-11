@@ -522,7 +522,7 @@ void runQMmpi(int jobid) {
   broadcast(cmm, vec_primes, ROOT);
 
   // step 2
-  find_results(cmm, vec_primes, relative, result, in_bit_num, assignments);
+  // find_results(cmm, vec_primes, relative, result, in_bit_num, assignments);
 
   if (cmm.rank() == ROOT) {
     cout << std::setprecision(8) << std::setw(10);
