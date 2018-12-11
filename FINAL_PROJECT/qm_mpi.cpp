@@ -220,6 +220,8 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   // record time for finding primes
   mpi::timer myclock;
 
+  return;
+
   for (int i = 0; i < in_bit_num; ++i) {
     bool localdone{false};
     auto it =
@@ -274,8 +276,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
       }
     }
   }
-
-  return; 
 
   vector<uint64_t> vec_primes_local, vec_primes_all;
   std::transform(prime.begin(), prime.end(),
