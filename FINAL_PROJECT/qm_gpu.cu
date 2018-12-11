@@ -246,7 +246,7 @@ void runQMgpu(int jobid, int blocksize) {
 
   int T{static_cast<int>(pow(3, in_bit_num))};
   int T3(T * 3);
-  int prime_size_limit{10000000};
+  int prime_size_limit{100000000};
 
   size_t nBytes = T3 * sizeof(bool);
   size_t nBytesB = (1 << in_bit_num) * sizeof(bool);
@@ -313,7 +313,7 @@ void runQMgpu(int jobid, int blocksize) {
   for (int num = 0; num < T; ++num) {
     if (A[3 * num] && !A[3 * num + 1] && !A[3 * num + 2]) {
       primes[avail++] = num;
-      if (avail == 0.5 * prime_size_limit) {
+      if (avail == prime_size_limit - 10) {
         cout << avail << endl;
         free(A);
         free(B);
@@ -321,7 +321,7 @@ void runQMgpu(int jobid, int blocksize) {
         cudaFree(d_A);
         cudaFree(d_C);
         cudaFree(d_B);
-        return 0;
+        return;
       }
     }
   }
