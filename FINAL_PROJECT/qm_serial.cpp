@@ -128,7 +128,7 @@ void find_primes_serial(vector<string>& v, vector<string>& vec_primes,
   std::copy(prime.begin(), prime.end(), std::back_inserter(vec_primes));
 
   time1 = (std::clock() - start) / double(CLOCKS_PER_SEC);
-  std::sort(vec_primes.begin(), vec_primes.end(), compareprime);
+  // std::sort(vec_primes.begin(), vec_primes.end(), compareprime);
 }
 
 // solve set cover problem by finding one solution

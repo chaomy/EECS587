@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 #include <boost/range/irange.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/unordered_set.hpp>
@@ -190,7 +191,7 @@ void find_results(mpi::communicator& cmm, vector<string>& vec_primes,
          ROOT);
 
   if (id == ROOT) {
-    time1 = myclock.elapsed();
+    time2 = myclock.elapsed();
     auto last = std::partition(result.begin(), result.end(), notEmpty);
     result.erase(last, result.end());
   }
@@ -208,16 +209,133 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   vector<vector<string>> buckets(bucketsize), next(bucketsize);
   vector<unordered_set<string>> vec_flags(bucketsize), vec_buffs(bucketsize);
 
-  // cout << "I am " << id << " start " << start_id << " end " << end_id
-  //      << " bucketsize " << bucketsize << " vec_primes "
-  //      << vec_primes_local.size() << " send size " << send_prime_size <<
-  //      endl;
+  for (auto& bucket : buckets) bucket.reserve(100000);
+  for (auto& bucket : next) bucket.reserve(100000);
+  for (auto& flags : vec_flags) flags.reserve(100000);
+  for (auto& flags : vec_buffs) flags.reserve(100000);
 
   for (auto key : v)
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
 
   // store according to num of 1 bits
   unordered_set<string> prime;
+  vector<string> old_begin_buckets;
+  bool totaldone{false};
+
+  // record time for finding primes
+  mpi::timer myclock;
+
+  for (int i = 0; i < in_bit_num; ++i) {
+    bool localdone{false};
+    auto it =
+        std::find_if(buckets.begin() + start_id, buckets.begin() + end_id + 1,
+                     [](const vector<string>& a) { return a.size(); });
+    if (it == buckets.begin() + end_id + 1) localdone = true;
+
+    all_reduce(cmm, localdone, totaldone, std::logical_and<bool>());
+    if (totaldone) break;
+
+    // update bucket
+    for (int j = start_id; j <= end_id; ++j) {
+      for (auto str_a : buckets[j]) {
+        for (auto str_b : buckets[j + 1]) {
+          int res = checkbits(in_bit_num, str_a, str_b);
+          if (res != -1) {  // can merge
+            vec_flags[j].insert(str_a);
+            vec_flags[j + 1].insert(str_b);
+            str_a[res] = '2';
+            next[j].push_back(str_a);
+            str_a[res] = '0';
+          }
+        }
+        if (j != start_id && vec_flags[j].find(str_a) == vec_flags[j].end())
+          prime.insert(str_a);
+      }  // loop over all items on buket layer i
+      if (j == start_id) old_begin_buckets = std::move(buckets[j]);
+      // vec_flags[j].clear();
+      buckets[j] = std::move(next[j]);
+    }  // loop over all layers
+
+    // communicates
+    if (id != firstworker) cmm.send(id - 1, 0, buckets[start_id]);
+    if (id != lastworker) cmm.recv(id + 1, 0, buckets[end_id + 1]);
+
+    if (id != firstworker) {
+      cmm.recv(id - 1, 1, vec_buffs[start_id]);
+    }
+
+    if (id != lastworker) {
+      vec_buffs[end_id + 1] = std::move(vec_flags[end_id + 1]);
+      cmm.send(id + 1, 1, vec_buffs[end_id + 1]);
+    }
+
+    // insert start into prime
+    for (auto str_a : old_begin_buckets) {
+      if (vec_flags[start_id].find(str_a) == vec_flags[start_id].end() &&
+          vec_buffs[start_id].find(str_a) == vec_buffs[start_id].end()) {
+        prime.insert(str_a);
+      }
+    }
+
+    // erase
+    vec_buffs[start_id].clear();
+    vec_flags[start_id].clear();
+  }
+
+  vector<uint64_t> vec_primes_local, vec_primes_all;
+  std::transform(prime.begin(), prime.end(),
+                 std::back_inserter(vec_primes_local), convertStrToNum<3>);
+
+  int local_prime_size = vec_primes_local.size();
+  int total_prime_size{0}, send_prime_size{0};
+
+  all_reduce(cmm, local_prime_size, send_prime_size, mpi::maximum<int>());
+
+  vector<int> each_prime_sizes(worker_num);
+
+  vec_primes_local.resize(send_prime_size);
+  vec_primes_all.resize(send_prime_size * worker_num);
+
+  gather(cmm, vec_primes_local.data(), send_prime_size, vec_primes_all.data(),
+         ROOT);
+
+  if (cmm.rank() == ROOT) time1 = myclock.elapsed();
+
+  gather(cmm, local_prime_size, each_prime_sizes, ROOT);
+
+  if (id == ROOT) {
+    // convert gathered primes<int> to the vec_prime<string>
+    for (int i = 0; i < worker_num; ++i) {
+      int start = i * send_prime_size;
+      int end = i * send_prime_size + each_prime_sizes[i];
+
+      vector<int> size_param(send_prime_size, in_bit_num);
+      // assign vec_primes
+      std::transform(vec_primes_all.begin() + start,
+                     vec_primes_all.begin() + end, size_param.begin(),
+                     std::back_inserter(vec_primes), convertNumToStr<3>);
+    }
+    sort(vec_primes.begin(), vec_primes.end(), compareprime());
+  }
+}
+
+void find_primes_org(mpi::communicator& cmm, vector<string>& v,
+                     vector<string>& vec_primes, int in_bit_num,
+                     vector<int>& assignments) {
+  int bucketsize = in_bit_num + 1;
+  int worker_num = assignments.size(), id = cmm.rank();
+  int firstworker{0}, lastworker{worker_num - 1};
+  int start_id = assignments[id];
+  int end_id = id == lastworker ? in_bit_num : assignments[id + 1] - 1;
+
+  vector<vector<string>> buckets(bucketsize), next(bucketsize);
+  vector<set<string>> vec_flags(bucketsize), vec_buffs(bucketsize);
+
+  for (auto key : v)
+    buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
+
+  // store according to num of 1 bits
+  set<string> prime;
   vector<string> old_begin_buckets;
   bool totaldone{false};
 
@@ -293,7 +411,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   gather(cmm, vec_primes_local.data(), send_prime_size, vec_primes_all.data(),
          ROOT);
 
-  if (cmm.rank() == ROOT) time2 = myclock.elapsed();
+  if (cmm.rank() == ROOT) time1 = myclock.elapsed();
 
   gather(cmm, local_prime_size, each_prime_sizes, ROOT);
 
