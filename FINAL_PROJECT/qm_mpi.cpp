@@ -395,9 +395,9 @@ void runQMmpi(int jobid) {
 
   // mpi::communicator subcmm = cmm.split(cmm.rank() < assignments.size());
 
+  return; 
   // step 1
   find_primes(cmm, v, vec_primes, in_bit_num, assignments);
-  return; 
 
   broadcast(cmm, vec_primes, ROOT);
 
