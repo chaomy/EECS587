@@ -224,9 +224,7 @@ void find_results_serial(vector<string>& vec_primes, vector<string>& relative,
     }
   }
 
-  return;
-
-  for (int i = relative.size(); i >= 0; --i) {
+  for (int i = relative.size() - 1; i >= 0; --i) {
     if (relative[i] == "0") continue;
     for (int j = vec_primes.size() - 1; j >= 0; --j) {
       if (vec_primes[j] == "0") continue;
