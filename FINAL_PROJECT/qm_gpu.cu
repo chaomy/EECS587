@@ -230,9 +230,9 @@ struct {
   }
 } comparePrime;
 
-int main() {
-  int BLOCK_X = 256;
-  readTrueTable("input.pla");
+void runQMgpu(int jobid, int blocksize) {
+  int BLOCK_X = blocksize;
+  readTrueTable("input.pla" + std::to_string(jobid));
 
   vector<string> v;
   vector<string> prime;   // vector<char*> prime;
@@ -372,6 +372,10 @@ int main() {
   cudaFree(d_A);
   cudaFree(d_C);
   cudaFree(d_B);
+}
+
+int main(int argc, char** argv) {
+  runQMgpu(atoi(argv[1]), atoi(argv[2]));
   return 0;
 }
 

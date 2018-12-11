@@ -44,9 +44,8 @@ namespace mpi = boost::mpi;
 // qm_mpi  -O3 -g -L${BOOST_LIB} -I${BOOST_INCLUDE}
 
 double time1{0}, time2{0};
-
 bool comp(int n, const string& a, const string& b) {
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; ++i) {
     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
   }
   return true;
