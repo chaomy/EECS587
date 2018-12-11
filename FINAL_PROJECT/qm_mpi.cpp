@@ -212,6 +212,10 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   for (auto key : v)
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
 
+  if (cmm.rank() == ROOT) {
+    for (auto item : buckets) cout << item.size() << endl;
+  }
+
   // store according to num of 1 bits
   unordered_set<string> prime;
   vector<string> old_begin_buckets;
@@ -220,7 +224,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   // record time for finding primes
   mpi::timer myclock;
 
-  return;
   for (int i = 0; i < in_bit_num; ++i) {
     bool localdone{false};
     auto it =
