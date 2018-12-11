@@ -25,7 +25,7 @@ int in_bit_num, out_bit_num;
 vector<string> in_labels, out_labels;
 vector<string> input, output;
 
-bool comp(int n, string a, string b) {
+bool comp(int n, const string& a, const string& b) {
   if (a.empty() || b.empty()) return false;
   for (int i = 0; i < n; i++) {
     if (a[i] != b[i] && (a[i] != '2' && b[i] != '2')) return false;
@@ -33,7 +33,7 @@ bool comp(int n, string a, string b) {
   return true;
 }
 
-int checkbits(int n, string a, string b) {
+int checkbits(int n, const string& a, const string& b) {
   if (a.empty() || b.empty()) return -1;
   int count = 0, temp;
   for (int i = 0; i < n; ++i) {
