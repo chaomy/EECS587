@@ -206,15 +206,10 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   int end_id = id == lastworker ? in_bit_num : assignments[id + 1] - 1;
 
   vector<vector<string>> buckets(bucketsize), next(bucketsize);
-  vector<unordered_set<string>> vec_flags(bucketsize);
-  vector<unordered_set<string>> vec_buffs(bucketsize);
+  vector<unordered_set<string>> vec_flags(bucketsize), vec_buffs(bucketsize);
 
   for (auto key : v)
     buckets[std::count(key.begin(), key.end(), '1')].push_back(key);
-
-  if (cmm.rank() == ROOT) {
-    for (auto item : buckets) cout << item.size() << endl;
-  }
 
   // store according to num of 1 bits
   unordered_set<string> prime;
@@ -263,7 +258,7 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     }
 
     if (id != lastworker) {
-      vec_buffs[end_id + 1] = std::move(vec_flags[end_id + 1]);
+      vec_buffs[end_id + 1] = vec_flags[end_id + 1];
       cmm.send(id + 1, 0, vec_buffs[end_id + 1]);
     }
 
@@ -271,9 +266,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
     for (auto str_a : old_begin_buckets) {
       if (vec_flags[start_id].find(str_a) == vec_flags[start_id].end() &&
           vec_buffs[start_id].find(str_a) == vec_buffs[start_id].end()) {
-        // if (id == 2) {
-        // cout << "I am " << id << " I am taking " << str_a << endl;
-        // }
         prime.insert(str_a);
       }
     }
