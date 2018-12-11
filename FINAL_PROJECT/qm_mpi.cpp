@@ -220,8 +220,6 @@ void find_primes(mpi::communicator& cmm, vector<string>& v,
   // record time for finding primes
   mpi::timer myclock;
 
-  return;
-
   for (int i = 0; i < in_bit_num; ++i) {
     bool localdone{false};
     auto it =
